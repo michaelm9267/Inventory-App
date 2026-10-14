@@ -154,7 +154,7 @@ button { cursor: pointer; }
   padding: 12px; border: 0; border-bottom: 1px solid var(--line); background: transparent;
 }
 .item:last-child { border-bottom: 0; }
-.item .n { grid-row: span 3; font: 700 1.2rem/1.2 var(--font-display); color: var(--muted); font-variant-numeric: tabular-nums; }
+.item .n { grid-row: span 4; font: 700 1.2rem/1.2 var(--font-display); color: var(--muted); font-variant-numeric: tabular-nums; }
 .item .line { font-family: var(--font-code); font-size: .85rem; word-break: break-all; }
 .item .line i { font-style: normal; color: var(--muted); font-family: var(--font-body); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; margin-right: 6px; }
 .item .none { color: var(--warn); }
@@ -184,7 +184,7 @@ button { cursor: pointer; }
 .flash { position: absolute; inset: 0; pointer-events: none; border: 0 solid #3cbf74; transition: border-width .15s; z-index: 4; }
 .flash.on { border-width: 10px; }
 
-.steps { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--surface); border-bottom: 1px solid var(--line); }
+.steps { display: grid; grid-template-columns: repeat(var(--n, 3), 1fr); background: var(--surface); border-bottom: 1px solid var(--line); }
 .steps span {
   padding: 10px 4px; text-align: center; font: 700 .95rem/1 var(--font-display); text-transform: uppercase; letter-spacing: .05em;
   color: var(--muted); border-bottom: 3px solid transparent;
@@ -228,6 +228,17 @@ button { cursor: pointer; }
 .export-opt b { font: 700 1.25rem/1.1 var(--font-display); text-transform: uppercase; letter-spacing: .03em; }
 .export-opt span { font-size: .85rem; font-weight: 500; color: var(--muted); }
 .export-opt[aria-busy="true"] { opacity: .6; }
+.kinds { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.kind {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left;
+  min-height: 112px; padding: 14px; border-radius: var(--r); border: 0;
+  background: var(--ink); color: var(--bg);
+}
+.kind b { font: 700 1.5rem/1 var(--font-display); text-transform: uppercase; letter-spacing: .02em; color: var(--accent); }
+.kind span { font-size: .8rem; line-height: 1.35; opacity: .8; }
+.kind:active { transform: translateY(1px); }
+.kind-tag { font: 700 .7rem/1 var(--font-body); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.ciic-chips .chip { min-width: 48px; font-family: var(--font-code); }
 @media (max-width: 380px) { .two { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -238,7 +249,11 @@ button { cursor: pointer; }
 <section class="screen" id="s-home">
   <header class="topbar"><h1>Inventory Scan</h1></header>
   <div class="body">
-    <button class="btn primary block" id="btn-new">+ New List</button>
+    <div class="label">Start a new list</div>
+    <div class="kinds" id="kinds">
+      <button class="kind" data-kind="tally"><b>Tally Sheet</b><span>SCAC · TCN · Tracking · Package · Pieces · Weight</span></button>
+      <button class="kind" data-kind="weekly"><b>Weekly Inventory</b><span>TCN · Tracking · NSN · Package · Pieces · CIIC · Location</span></button>
+    </div>
     <div class="label">Lists on this phone</div>
     <div id="home-lists" class="stack"></div>
   </div>
@@ -246,13 +261,13 @@ button { cursor: pointer; }
 
 <!-- NEW LIST -->
 <section class="screen" id="s-new" hidden>
-  <header class="topbar"><button id="new-back">Cancel</button><h2>New List</h2></header>
+  <header class="topbar"><button id="new-back">Cancel</button><h2 id="new-title">New List</h2></header>
   <form class="body" id="new-form" novalidate>
     <div class="field">
       <label class="label" for="new-member">Member name</label>
       <input class="input" id="new-member" autocomplete="name" placeholder="Who is building this list?" required>
     </div>
-    <div class="field">
+    <div class="field" id="scac-field">
       <span class="label" id="scac-label">SCAC (carrier)</span>
       <div class="chips" id="scac-chips" role="group" aria-labelledby="scac-label"></div>
       <input class="input code" id="new-scac-other" placeholder="Type SCAC, e.g. ODFL" maxlength="4" autocapitalize="characters" hidden>
@@ -291,15 +306,12 @@ button { cursor: pointer; }
     <div class="cam-msg" id="cam-msg">Starting camera…</div>
     <button class="torch" id="torch" aria-pressed="false" hidden>Light</button>
   </div>
-  <div class="steps" id="steps"><span data-s="tcn">1 · TCN</span><span data-s="trk">2 · Tracking</span><span data-s="det">3 · Details</span></div>
+  <div class="steps" id="steps"></div>
   <div class="body" id="scan-body">
 
     <!-- step: TCN / tracking (shared scan panel) -->
     <div id="p-scan" class="field" style="gap:14px">
-      <div class="captured" id="cap-tcn-mini" hidden>
-        <div><div class="label">TCN</div><div class="val" id="cap-tcn-mini-val"></div></div>
-        <button class="btn small" id="redo-tcn-mini">Redo</button>
-      </div>
+      <div class="field" id="cap-mini" style="gap:8px"></div>
       <p class="prompt" id="scan-prompt">Scan TCN</p>
       <p class="hint" id="scan-hint">Point the camera at the TCN barcode or QR code.</p>
       <div class="row">
@@ -315,14 +327,7 @@ button { cursor: pointer; }
 
     <!-- step: details -->
     <form id="p-det" class="field" style="gap:14px" hidden novalidate>
-      <div class="captured">
-        <div><div class="label">TCN</div><div class="val" id="cap-tcn"></div></div>
-        <button class="btn small" type="button" id="redo-tcn">Rescan</button>
-      </div>
-      <div class="captured">
-        <div><div class="label">Tracking number</div><div class="val" id="cap-trk"></div></div>
-        <button class="btn small" type="button" id="redo-trk">Rescan</button>
-      </div>
+      <div class="field" id="cap-list" style="gap:8px"></div>
       <div class="warnbox" id="dup-warn" hidden></div>
       <div class="field">
         <span class="label" id="pkg-label">Package type</span>
@@ -338,10 +343,19 @@ button { cursor: pointer; }
             <button type="button" id="pc-plus" aria-label="More pieces">+</button>
           </div>
         </div>
-        <div class="field">
+        <div class="field" id="weight-field">
           <label class="label" for="weight">Weight (lb)</label>
           <input class="input" id="weight" inputmode="decimal" placeholder="0.0">
         </div>
+      </div>
+      <div class="field" id="ciic-field">
+        <span class="label" id="ciic-label">CIIC</span>
+        <div class="chips ciic-chips" id="ciic-chips" role="group" aria-labelledby="ciic-label"></div>
+        <input class="input code" id="ciic-other" placeholder="Type CIIC code" maxlength="1" autocapitalize="characters" hidden>
+      </div>
+      <div class="field" id="loc-field">
+        <label class="label" for="location">Location</label>
+        <input class="input code" id="location" placeholder="e.g. A-12-03" autocomplete="off" autocapitalize="characters" spellcheck="false">
       </div>
       <button class="btn primary block" type="submit">Save &amp; Scan Next</button>
     </form>
@@ -360,13 +374,22 @@ button { cursor: pointer; }
       <label class="label" for="e-trk">Tracking number (leave blank for none)</label>
       <input class="input code" id="e-trk" autocapitalize="characters" spellcheck="false">
     </div>
+    <div class="field" data-tally>
+      <label class="label" for="e-nsn">NSN (leave blank for No NSN)</label>
+      <input class="input code" id="e-nsn" autocapitalize="characters" spellcheck="false">
+    </div>
     <div class="field">
       <label class="label" for="e-pkg">Package type</label>
       <input class="input" id="e-pkg">
     </div>
     <div class="two">
       <div class="field"><label class="label" for="e-pcs">Piece count</label><input class="input" id="e-pcs" inputmode="numeric"></div>
-      <div class="field"><label class="label" for="e-wt">Weight (lb)</label><input class="input" id="e-wt" inputmode="decimal"></div>
+      <div class="field" data-weekly><label class="label" for="e-wt">Weight (lb)</label><input class="input" id="e-wt" inputmode="decimal"></div>
+      <div class="field" data-tally><label class="label" for="e-ciic">CIIC</label><input class="input code" id="e-ciic" maxlength="1" autocapitalize="characters"></div>
+    </div>
+    <div class="field" data-tally>
+      <label class="label" for="e-loc">Location</label>
+      <input class="input code" id="e-loc" autocapitalize="characters" spellcheck="false">
     </div>
     <button class="btn primary block" type="submit">Save Changes</button>
     <div class="row">
@@ -396,14 +419,19 @@ button { cursor: pointer; }
   'use strict';
   const COMMON_SCACS = ['FDE', 'UPSN', 'PAZC'];
   const PKG_TYPES = ['Box', 'Pallet', 'Envelope', 'Crate', 'Tube', 'Bag', 'Drum'];
+  const CIIC_CODES = ['U', 'J', '7', '9', 'Q', 'R'];
+  const KINDS = { tally: 'Tally Sheet', weekly: 'Weekly Inventory' };
+  const isWeekly = l => l && l.kind === 'weekly';
+  const tagOf = l => isWeekly(l) ? 'WEEKLY' : l.scac;
   const KEY = 'inventory-scan.v1';
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
   // ---------- storage ----------
-  let store = { lists: [], lastMember: '', lastPkg: 'Box' };
+  let store = { lists: [], lastMember: '', lastPkg: 'Box', lastLocation: '' };
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.lists)) store = Object.assign(store, s); } catch {}
+  store.lists.forEach(l => { if (!l.kind) l.kind = 'tally'; });
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch {} };
   try { navigator.storage?.persist?.(); } catch {}
 
@@ -428,6 +456,13 @@ button { cursor: pointer; }
     const usps = s.match(/^420\d{5}(?:\d{4})?(9\d{19,25})$/); // USPS GS1 with ZIP prefix
     if (usps) return usps[1];
     return s;
+  }
+
+  // NSN: 13 characters (4-digit FSC + 9-character NIIN), shown as 5340-01-234-5678.
+  function cleanNsn(raw) {
+    const s = raw.replace(/[\x00-\x1f]/g, '').trim().replace(/\s+/g, '').toUpperCase();
+    const d = s.replace(/-/g, '');
+    return /^\d{4}[0-9A-Z]{9}$/.test(d) ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 9)}-${d.slice(9)}` : s;
   }
 
   // ---------- feedback ----------
@@ -467,16 +502,16 @@ button { cursor: pointer; }
     const el = $('#home-lists');
     const lists = [...store.lists].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     if (!lists.length) {
-      el.innerHTML = `<div class="empty"><strong>No lists yet</strong>Tap <b>New List</b>, enter your name and the SCAC, then scan each item's TCN and tracking number.</div>`;
+      el.innerHTML = `<div class="empty"><strong>No lists yet</strong>Choose <b>Tally Sheet</b> or <b>Weekly Inventory</b> above, enter your name, then start scanning.</div>`;
       return;
     }
     el.innerHTML = lists.map(l => {
       const t = totals(l);
       return `<button class="list-card" data-id="${l.id}">
-        <span class="scac-tag">${esc(l.scac)}</span>
+        <span class="scac-tag">${esc(tagOf(l))}</span>
         <span class="who">${esc(l.member)}</span>
         <span class="count">${t.items}<small>items</small></span>
-        <span class="when">${esc(fmtDate(l.createdAt))}</span>
+        <span class="when"><span class="kind-tag">${KINDS[l.kind]}</span> · ${esc(fmtDate(l.createdAt))}</span>
       </button>`;
     }).join('');
   }
@@ -486,7 +521,7 @@ button { cursor: pointer; }
   });
 
   // ---------- new list ----------
-  let newScac = '', stampTimer;
+  let newScac = '', newKind = 'tally', stampTimer;
   function renderScacChips() {
     const isOther = newScac === 'OTHER';
     $('#scac-chips').innerHTML = [...COMMON_SCACS, 'Other'].map(s => {
@@ -500,7 +535,11 @@ button { cursor: pointer; }
     newScac = b.dataset.v; renderScacChips(); $('#new-err').hidden = true;
     if (newScac === 'OTHER') $('#new-scac-other').focus();
   });
-  $('#btn-new').addEventListener('click', () => {
+  $('#kinds').addEventListener('click', e => {
+    const k = e.target.closest('.kind'); if (!k) return;
+    newKind = k.dataset.kind;
+    $('#new-title').textContent = 'New ' + KINDS[newKind];
+    $('#scac-field').hidden = newKind === 'weekly';
     newScac = ''; renderScacChips();
     $('#new-member').value = store.lastMember || '';
     $('#new-scac-other').value = '';
@@ -514,11 +553,11 @@ button { cursor: pointer; }
   $('#new-form').addEventListener('submit', e => {
     e.preventDefault();
     const member = $('#new-member').value.trim();
-    const scac = newScac === 'OTHER' ? $('#new-scac-other').value.trim().toUpperCase() : newScac;
-    const err = !member ? 'Enter the member name.' : !scac ? 'Choose a SCAC, or tap Other and type one.' : '';
+    const scac = newKind === 'weekly' ? '' : newScac === 'OTHER' ? $('#new-scac-other').value.trim().toUpperCase() : newScac;
+    const err = !member ? 'Enter the member name.' : (!scac && newKind !== 'weekly') ? 'Choose a SCAC, or tap Other and type one.' : '';
     if (err) { $('#new-err').textContent = err; $('#new-err').hidden = false; return; }
     clearInterval(stampTimer);
-    const list = { id: uid(), member, scac, createdAt: new Date().toISOString(), items: [] };
+    const list = { id: uid(), kind: newKind, member, scac, createdAt: new Date().toISOString(), items: [] };
     store.lists.push(list); store.lastMember = member; save();
     current = list;
     startScan();
@@ -528,18 +567,23 @@ button { cursor: pointer; }
   function openList(l) { current = l; renderList(); show('s-list'); }
   function renderList() {
     const l = current, t = totals(l);
-    $('#list-title').textContent = `${l.scac} · ${l.items.length} items`;
-    $('#list-meta').innerHTML = `<dt>Member</dt><dd>${esc(l.member)}</dd><dt>SCAC</dt><dd class="code">${esc(l.scac)}</dd><dt>Created</dt><dd>${esc(fmtDate(l.createdAt))}</dd>`;
+    $('#list-title').textContent = `${tagOf(l)} · ${l.items.length} items`;
+    $('#list-meta').innerHTML = `<dt>Type</dt><dd>${KINDS[l.kind]}</dd><dt>Member</dt><dd>${esc(l.member)}</dd>${isWeekly(l) ? '' : `<dt>SCAC</dt><dd class="code">${esc(l.scac)}</dd>`}<dt>Created</dt><dd>${esc(fmtDate(l.createdAt))}</dd>`;
     $('#list-totals').innerHTML = `
       <div class="total"><b>${t.items}</b><span>Items</span></div>
       <div class="total"><b>${t.pieces}</b><span>Pieces</span></div>
-      <div class="total"><b>${fmtWt(t.weight)}</b><span>Total lb</span></div>`;
+      ${isWeekly(l)
+        ? `<div class="total"><b>${new Set(l.items.map(i => i.location).filter(Boolean)).size}</b><span>Locations</span></div>`
+        : `<div class="total"><b>${fmtWt(t.weight)}</b><span>Total lb</span></div>`}`;
     $('#list-items').innerHTML = l.items.length ? l.items.map((it, i) => `
       <button class="item" data-i="${i}">
         <span class="n">${i + 1}</span>
         <span class="line"><i>TCN</i>${it.tcn ? esc(it.tcn) : '<span class="none">No TCN</span>'}</span>
         <span class="line"><i>Trk</i>${it.tracking ? esc(it.tracking) : '<span class="none">No tracking #</span>'}</span>
-        <span class="det">${esc(it.pkgType)} · ${it.pieces} pc${it.pieces == 1 ? '' : 's'}${it.weight ? ' · ' + esc(it.weight) + ' lb' : ''}</span>
+        ${isWeekly(l) ? `<span class="line"><i>NSN</i>${it.nsn ? esc(it.nsn) : '<span class="none">No NSN</span>'}</span>` : ''}
+        <span class="det">${esc(it.pkgType)} · ${it.pieces} pc${it.pieces == 1 ? '' : 's'}${isWeekly(l)
+          ? (it.ciic ? ' · CIIC ' + esc(it.ciic) : '') + (it.location ? ' · ' + esc(it.location) : '')
+          : (it.weight ? ' · ' + esc(it.weight) + ' lb' : '')}</span>
       </button>`).join('') : `<div class="empty" style="border:0"><strong>No items</strong>Tap Scan Items to add the first one.</div>`;
   }
   $('#list-back').addEventListener('click', () => { renderHome(); show('s-home'); });
@@ -553,9 +597,29 @@ button { cursor: pointer; }
   });
 
   // ---------- export (PDF / Excel / CSV) ----------
-  const HEAD = ['Item #', 'TCN', 'Tracking Number', 'Package Type', 'Piece Count', 'Weight (lb)', 'Scanned At'];
-  const itemRow = (it, i) => [i + 1, it.tcn || 'NO TCN', it.tracking || 'NO TRACKING NUMBER', it.pkgType,
-    +it.pieces || 1, it.weight === '' || it.weight == null ? '' : (parseFloat(it.weight) || 0), csvDate(it.scannedAt)];
+  // Column sets per list type. w = Excel width, pdf = fixed PDF width (others share the rest).
+  const COLS = {
+    tally: [
+      { h: 'Item #', w: 14, pdf: 44, v: (it, i) => i + 1 },
+      { h: 'TCN', w: 27, code: true, v: it => it.tcn || 'NO TCN' },
+      { h: 'Tracking Number', w: 28, code: true, v: it => it.tracking || 'NO TRACKING NUMBER' },
+      { h: 'Package Type', w: 16, pdf: 74, v: it => it.pkgType },
+      { h: 'Piece Count', w: 13, pdf: 70, pieces: true, v: it => +it.pieces || 1 },
+      { h: 'Weight (lb)', w: 13, pdf: 70, weight: true, v: it => it.weight === '' || it.weight == null ? null : (parseFloat(it.weight) || 0) }
+    ],
+    weekly: [
+      { h: 'Item #', w: 10, pdf: 40, v: (it, i) => i + 1 },
+      { h: 'TCN', w: 25, code: true, v: it => it.tcn || 'NO TCN' },
+      { h: 'Tracking Number', w: 25, code: true, v: it => it.tracking || 'NO TRACKING NUMBER' },
+      { h: 'NSN', w: 20, pdf: 112, code: true, v: it => it.nsn || 'NO NSN' },
+      { h: 'Package Type', w: 15, pdf: 72, v: it => it.pkgType },
+      { h: 'Piece Count', w: 12, pdf: 60, pieces: true, v: it => +it.pieces || 1 },
+      { h: 'CIIC', w: 8, pdf: 40, v: it => it.ciic || '' },
+      { h: 'Location', w: 16, pdf: 84, v: it => it.location || '' }
+    ]
+  };
+  const cols = l => COLS[l.kind] || COLS.tally;
+  const isMissing = v => typeof v === 'string' && /^NO (TCN|TRACKING|NSN)/.test(v);
 
   // Load a vendored library the first time it's needed, so the app starts fast.
   const loaded = {};
@@ -567,23 +631,24 @@ button { cursor: pointer; }
 
   function toCsv(l) {
     const q = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
-    const head = ['List Created', 'Member', 'SCAC', ...HEAD];
-    const rows = l.items.map((it, i) => [csvDate(l.createdAt), l.member, l.scac, ...itemRow(it, i)]);
+    const cs = cols(l);
+    const scac = !isWeekly(l);
+    const head = ['List Type', 'List Created', 'Member', ...(scac ? ['SCAC'] : []), ...cs.map(c => c.h), 'Scanned At'];
+    const rows = l.items.map((it, i) => [KINDS[l.kind], csvDate(l.createdAt), l.member, ...(scac ? [l.scac] : []), ...cs.map(c => c.v(it, i)), csvDate(it.scannedAt)]);
     return [head, ...rows].map(r => r.map(q).join(',')).join('\r\n') + '\r\n';
   }
 
   // Shared report pieces: title like FDE13OCT2026, date 13-Oct-26, time 22:45.
   const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const listTitle = l => { const d = new Date(l.createdAt); return `${l.scac}${pad(d.getDate())}${MON[d.getMonth()].toUpperCase()}${d.getFullYear()}`; };
+  const listTitle = l => { const d = new Date(l.createdAt); return `${isWeekly(l) ? 'INV' : l.scac}${pad(d.getDate())}${MON[d.getMonth()].toUpperCase()}${d.getFullYear()}`; };
+  const fileName = l => listTitle(l);
   const repDate = iso => { const d = new Date(iso); return `${pad(d.getDate())}-${MON[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`; };
   const repTime = iso => { const d = new Date(iso); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
-  const REPORT_HEAD = ['Item #', 'TCN', 'Tracking Number', 'Package Type', 'Piece Count', 'Weight (lb)'];
-  const reportRow = (it, i) => [i + 1, it.tcn || 'NO TCN', it.tracking || 'NO TRACKING NUMBER', it.pkgType,
-    +it.pieces || 1, it.weight === '' || it.weight == null ? null : (parseFloat(it.weight) || 0)];
 
   async function toXlsx(l) {
     await loadScript('vendor/exceljs.min.js');
     const title = listTitle(l), n = l.items.length, t = totals(l);
+    const cs = cols(l), nc = cs.length, L = c => String.fromCharCode(64 + c), END = L(nc);
     const C = { navy: 'FF16202B', amber: 'FFFFB81C', slate: 'FF34465A', label: 'FFE9EDF1', band: 'FFF5F7FA',
       line: 'FFC9D1DA', muted: 'FF5B6878', warn: 'FFB85C00', white: 'FFFFFFFF' };
     const fill = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
@@ -597,22 +662,24 @@ button { cursor: pointer; }
     wb.creator = l.member; wb.created = new Date();
     const ws = wb.addWorksheet(title, {
       views: [{ state: 'frozen', ySplit: 7, showGridLines: false }],
-      pageSetup: { paperSize: 1, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0,
+      pageSetup: { paperSize: 1, orientation: isWeekly(l) ? 'landscape' : 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0,
         horizontalCentered: true, printTitlesRow: '7:7',
         margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.6, header: 0.3, footer: 0.3 } },
-      headerFooter: { oddFooter: `&L&8${title} · ${l.member}&R&8Page &P of &N` }
+      headerFooter: { oddFooter: `&L&8${title} · ${KINDS[l.kind]} · ${l.member}&R&8Page &P of &N` }
     });
-    ws.columns = [{ width: 14 }, { width: 27 }, { width: 28 }, { width: 16 }, { width: 13 }, { width: 13 }];
+    ws.columns = cs.map(c => ({ width: c.w }));
 
-    // Title bar + amber rule
-    ws.mergeCells('A1:F1');
+    // Title bar (name + list type) and amber rule
+    ws.mergeCells(`A1:${END}1`);
     const tc = ws.getCell('A1');
-    tc.value = title;
-    tc.font = { name: 'Calibri', size: 24, bold: true, color: { argb: C.white } };
+    tc.value = { richText: [
+      { text: title, font: { name: 'Calibri', size: 24, bold: true, color: { argb: C.white } } },
+      { text: '\n' + KINDS[l.kind].toUpperCase(), font: { name: 'Calibri', size: 10, bold: true, color: { argb: C.amber } } }
+    ] };
     tc.fill = fill(C.navy);
-    tc.alignment = { horizontal: 'center', vertical: 'middle' };
-    ws.getRow(1).height = 44;
-    ws.mergeCells('A2:F2'); ws.getCell('A2').fill = fill(C.amber); ws.getRow(2).height = 5;
+    tc.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    ws.getRow(1).height = 54;
+    ws.mergeCells(`A2:${END}2`); ws.getCell('A2').fill = fill(C.amber); ws.getRow(2).height = 5;
     ws.getRow(3).height = 10; ws.getRow(6).height = 10;
 
     // Label/value pairs. valueEnd lets a value span two columns.
@@ -629,15 +696,16 @@ button { cursor: pointer; }
       vc.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
       if (numFmt) vc.numFmt = numFmt;
     };
+    const RL = L(nc - 2), RV = L(nc - 1); // right-hand label / value columns
     pair('A4', 'B4', null, 'Member', l.member);
-    pair('A5', 'B5', null, 'SCAC', l.scac);
-    pair('D4', 'E4', 'F4', 'Date', xlDate, 'dd-mmm-yy');
-    pair('D5', 'E5', 'F5', 'Time', xlDate, 'hh:mm');
+    if (!isWeekly(l)) pair('A5', 'B5', null, 'SCAC', l.scac);
+    pair(`${RL}4`, `${RV}4`, `${END}4`, 'Date', xlDate, 'dd-mmm-yy');
+    pair(`${RL}5`, `${RV}5`, `${END}5`, 'Time', xlDate, 'hh:mm');
     ws.getRow(4).height = 20; ws.getRow(5).height = 20;
 
     // Item table
     const hdr = ws.getRow(7);
-    hdr.values = REPORT_HEAD; hdr.height = 24;
+    hdr.values = cs.map(c => c.h); hdr.height = 24;
     hdr.eachCell(c => {
       c.font = { bold: true, size: 11, color: { argb: C.white } };
       c.fill = fill(C.slate); c.border = box;
@@ -645,30 +713,32 @@ button { cursor: pointer; }
     });
     l.items.forEach((it, i) => {
       const r = ws.getRow(8 + i);
-      r.values = reportRow(it, i); r.height = 19;
-      for (let c = 1; c <= 6; c++) {
-        const cell = r.getCell(c), code = c === 2 || c === 3;
+      r.values = cs.map(c => c.v(it, i)); r.height = 19;
+      cs.forEach((col, k) => {
+        const cell = r.getCell(k + 1);
         cell.border = box;
-        cell.alignment = code ? { horizontal: 'left', vertical: 'middle', indent: 1 } : { horizontal: 'center', vertical: 'middle' };
+        cell.alignment = col.code ? { horizontal: 'left', vertical: 'middle', indent: 1 } : { horizontal: 'center', vertical: 'middle' };
         if (i % 2) cell.fill = fill(C.band);
-        if (code) {
-          const missing = !(c === 2 ? it.tcn : it.tracking);
-          cell.font = missing ? { italic: true, size: 10, color: { argb: C.warn } } : { name: 'Consolas', size: 10.5, color: { argb: C.navy } };
+        if (col.code) {
+          cell.font = isMissing(cell.value) ? { italic: true, size: 10, color: { argb: C.warn } } : { name: 'Consolas', size: 10.5, color: { argb: C.navy } };
         }
-      }
-      r.getCell(6).numFmt = '#,##0.0';
+        if (col.weight) cell.numFmt = '#,##0.0';
+      });
     });
     const last = 7 + n;
-    ws.autoFilter = `A7:F${Math.max(8, last)}`;
+    ws.autoFilter = `A7:${END}${Math.max(8, last)}`;
 
     // Totals (live formulas, so edits in Excel re-total)
     const tr = last + 2;
+    const colOf = key => L(cs.findIndex(c => c[key]) + 1);
     const sum = (col, result) => n ? { formula: `SUM(${col}8:${col}${last})`, result } : result;
-    pair(`A${tr}`, `B${tr}`, null, 'Total pieces', sum('E', t.pieces));
+    pair(`A${tr}`, `B${tr}`, null, 'Total pieces', sum(colOf('pieces'), t.pieces));
     pair(`A${tr + 1}`, `B${tr + 1}`, null, 'Total items', n ? { formula: `COUNTA(A8:A${last})`, result: n } : 0);
-    pair(`D${tr}`, `E${tr}`, `F${tr}`, 'Total weight', sum('F', Math.round(t.weight * 10) / 10), '#,##0.0 "lb"');
+    if (cs.some(c => c.weight)) {
+      pair(`${RL}${tr}`, `${RV}${tr}`, `${END}${tr}`, 'Total weight', sum(colOf('weight'), Math.round(t.weight * 10) / 10), '#,##0.0 "lb"');
+      ws.getCell(`${RV}${tr}`).alignment = { horizontal: 'center', vertical: 'middle' };
+    }
     [tr, tr + 1].forEach(r => { ws.getRow(r).height = 20; ws.getCell(`B${r}`).alignment = { horizontal: 'center', vertical: 'middle' }; });
-    ws.getCell(`E${tr}`).alignment = { horizontal: 'center', vertical: 'middle' };
 
     const buf = await wb.xlsx.writeBuffer();
     return new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -679,16 +749,18 @@ button { cursor: pointer; }
     await loadScript('vendor/jspdf.plugin.autotable.min.js');
     const { jsPDF } = window.jspdf;
     if (!jsPDF.API.autoTable && window.applyPlugin) window.applyPlugin(jsPDF);
-    const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+    const doc = new jsPDF({ unit: 'pt', format: 'letter', orientation: isWeekly(l) ? 'landscape' : 'portrait' });
     const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 40;
-    const title = listTitle(l), t = totals(l);
+    const title = listTitle(l), t = totals(l), cs = cols(l);
     const NAVY = [22, 32, 43], SLATE = [52, 70, 90], MUTED = [91, 104, 120], LINE = [201, 209, 218], LABEL = [233, 237, 241];
 
-    // Title bar + amber rule
+    // Title bar (name + list type) and amber rule
     doc.setFillColor(...NAVY); doc.rect(0, 0, W, 66, 'F');
     doc.setFillColor(255, 184, 28); doc.rect(0, 66, W, 4, 'F');
     doc.setFont('helvetica', 'bold'); doc.setFontSize(26); doc.setTextColor(255, 255, 255);
-    doc.text(title, W / 2, 43, { align: 'center' });
+    doc.text(title, W / 2, 38, { align: 'center' });
+    doc.setFontSize(9); doc.setTextColor(255, 184, 28);
+    doc.text(KINDS[l.kind].toUpperCase(), W / 2, 55, { align: 'center', charSpace: 1.2 });
 
     // Label/value box pair, shrinking long values to fit.
     const LW = 78, VW = 160, BH = 22;
@@ -704,28 +776,29 @@ button { cursor: pointer; }
     };
     const RX = W - M - LW - VW;
     pair(M, 92, 'Member', l.member);
-    pair(M, 92 + BH, 'SCAC', l.scac);
+    if (!isWeekly(l)) pair(M, 92 + BH, 'SCAC', l.scac);
     pair(RX, 92, 'Date', repDate(l.createdAt));
     pair(RX, 92 + BH, 'Time', repTime(l.createdAt));
 
+    const columnStyles = {};
+    cs.forEach((c, i) => {
+      columnStyles[i] = c.code ? { font: 'courier', fontStyle: 'bold' } : { halign: 'center' };
+      if (c.pdf) columnStyles[i].cellWidth = c.pdf;
+    });
     doc.autoTable({
       startY: 92 + BH * 2 + 24,
       margin: { left: M, right: M, bottom: 48, top: 40 },
-      head: [REPORT_HEAD],
+      head: [cs.map(c => c.h)],
       body: l.items.length
-        ? l.items.map((it, i) => { const r = reportRow(it, i); r[5] = r[5] == null ? '' : r[5].toFixed(1); return r.map(String); })
-        : [[{ content: 'No items scanned', colSpan: 6, styles: { halign: 'center', textColor: MUTED, fontStyle: 'italic' } }]],
+        ? l.items.map((it, i) => cs.map(c => { const v = c.v(it, i); return v == null ? '' : c.weight ? v.toFixed(1) : String(v); }))
+        : [[{ content: 'No items scanned', colSpan: cs.length, styles: { halign: 'center', textColor: MUTED, fontStyle: 'italic' } }]],
       theme: 'grid',
       styles: { fontSize: 9.5, cellPadding: { top: 6, bottom: 6, left: 6, right: 6 }, lineColor: LINE, lineWidth: 0.75, textColor: NAVY, valign: 'middle' },
       headStyles: { fillColor: SLATE, textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
       alternateRowStyles: { fillColor: [245, 247, 250] },
-      columnStyles: {
-        0: { halign: 'center', cellWidth: 44 },
-        1: { font: 'courier', fontStyle: 'bold' }, 2: { font: 'courier', fontStyle: 'bold' },
-        3: { halign: 'center', cellWidth: 74 }, 4: { halign: 'center', cellWidth: 70 }, 5: { halign: 'center', cellWidth: 70 }
-      },
+      columnStyles,
       didParseCell: c => {
-        if (c.section === 'body' && /^NO (TCN|TRACKING)/.test(c.cell.raw)) {
+        if (c.section === 'body' && isMissing(c.cell.raw)) {
           c.cell.styles.textColor = [184, 92, 0]; c.cell.styles.font = 'helvetica'; c.cell.styles.fontStyle = 'italic';
         }
       }
@@ -736,14 +809,14 @@ button { cursor: pointer; }
     if (y + BH * 2 > H - 60) { doc.addPage(); y = 50; }
     pair(M, y, 'Total pieces', String(t.pieces));
     pair(M, y + BH, 'Total items', String(t.items));
-    pair(RX, y, 'Total weight', `${fmtWt(t.weight)} lb`);
+    if (cs.some(c => c.weight)) pair(RX, y, 'Total weight', `${fmtWt(t.weight)} lb`);
 
     const pages = doc.getNumberOfPages();
     for (let p = 1; p <= pages; p++) {
       doc.setPage(p);
       doc.setDrawColor(...LINE); doc.setLineWidth(0.5); doc.line(M, H - 34, W - M, H - 34);
       doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
-      doc.text(`${title} · ${l.member}`, M, H - 22);
+      doc.text(`${title} · ${KINDS[l.kind]} · ${l.member}`, M, H - 22);
       doc.text(`Page ${p} of ${pages}`, W - M, H - 22, { align: 'right' });
     }
     return doc.output('blob');
@@ -761,7 +834,7 @@ button { cursor: pointer; }
   const closeExport = () => { $('#export-wrap').hidden = true; };
   $('#btn-export').addEventListener('click', () => {
     const t = totals(current);
-    $('#export-sum').textContent = `${current.scac} · ${current.member} · ${t.items} items, ${t.pieces} pieces, ${fmtWt(t.weight)} lb`;
+    $('#export-sum').textContent = `${KINDS[current.kind]} · ${isWeekly(current) ? '' : current.scac + ' · '}${current.member} · ${t.items} items, ${t.pieces} pieces` + (isWeekly(current) ? '' : `, ${fmtWt(t.weight)} lb`);
     $('#export-wrap').hidden = false;
   });
   $('#export-cancel').addEventListener('click', closeExport);
@@ -775,7 +848,7 @@ button { cursor: pointer; }
         : fmt === 'xlsx' ? await toXlsx(l)
         : new Blob([toCsv(l)], { type: 'text/csv' });
       closeExport();
-      await deliver(blob, `${listTitle(l)}.${fmt}`);
+      await deliver(blob, `${fileName(l)}.${fmt}`);
     } catch (err) {
       toast('Export failed. Check your connection and try again.');
     } finally {
@@ -789,7 +862,11 @@ button { cursor: pointer; }
     editIdx = i; const it = current.items[i];
     $('#edit-title').textContent = `Edit Item ${i + 1}`;
     $('#e-tcn').value = it.tcn; $('#e-trk').value = it.tracking; $('#e-pkg').value = it.pkgType;
-    $('#e-pcs').value = it.pieces; $('#e-wt').value = it.weight;
+    $('#e-pcs').value = it.pieces; $('#e-wt').value = it.weight ?? '';
+    $('#e-nsn').value = it.nsn || ''; $('#e-ciic').value = it.ciic || ''; $('#e-loc').value = it.location || '';
+    const tally = isWeekly(current);
+    document.querySelectorAll('#edit-form [data-tally]').forEach(el => el.hidden = !tally);
+    document.querySelectorAll('#edit-form [data-weekly]').forEach(el => el.hidden = tally);
     $('#edit-wrap').hidden = false;
   }
   const closeEdit = () => { $('#edit-wrap').hidden = true; editIdx = -1; };
@@ -802,7 +879,13 @@ button { cursor: pointer; }
     it.tracking = cleanTracking($('#e-trk').value);
     it.pkgType = $('#e-pkg').value.trim() || 'Box';
     it.pieces = Math.max(1, parseInt($('#e-pcs').value, 10) || 1);
-    it.weight = $('#e-wt').value.trim();
+    if (isWeekly(current)) {
+      it.nsn = cleanNsn($('#e-nsn').value);
+      it.ciic = $('#e-ciic').value.trim().toUpperCase();
+      it.location = $('#e-loc').value.trim().toUpperCase();
+    } else {
+      it.weight = $('#e-wt').value.trim();
+    }
     save(); closeEdit(); renderList(); toast('Item updated');
   });
   $('#e-del').addEventListener('click', e => confirmTap(e.currentTarget, 'Tap again to delete', () => {
@@ -810,8 +893,18 @@ button { cursor: pointer; }
   }));
 
   // ---------- scanning flow ----------
+  const SCAN = {
+    tcn: { label: 'TCN', name: 'TCN', prompt: 'Scan TCN', none: 'No TCN', ph: 'Type TCN', clean: cleanTcn,
+      hint: 'Point the camera at the TCN barcode or QR code. TCNs are 17 characters.' },
+    trk: { label: 'Tracking', name: 'Tracking number', prompt: 'Scan Tracking #', none: 'No Tracking #', ph: 'Type tracking number', clean: cleanTracking,
+      hint: 'Point the camera at the carrier tracking barcode.' },
+    nsn: { label: 'NSN', name: 'NSN', prompt: 'Scan NSN', none: 'No NSN', ph: 'Type NSN', clean: cleanNsn,
+      hint: 'Point the camera at the NSN barcode. NSNs are 13 digits, like 5340-01-234-5678.' }
+  };
   let step = 'tcn', stepAt = 0, draft = null;
-  const newDraft = () => ({ tcn: '', trk: '', pkg: store.lastPkg || 'Box', pieces: 1, weight: '' });
+  const flow = () => isWeekly(current) ? ['tcn', 'trk', 'nsn', 'det'] : ['tcn', 'trk', 'det'];
+  const newDraft = () => ({ tcn: '', trk: '', nsn: '', back: false, pkg: store.lastPkg || 'Box', pieces: 1, weight: '',
+    ciic: '', location: store.lastLocation || '' });
 
   function startScan() {
     draft = newDraft();
@@ -821,14 +914,22 @@ button { cursor: pointer; }
   }
   $('#scan-done').addEventListener('click', () => { renderList(); show('s-list'); });
 
+  // Captured-code rows with a redo button, e.g. "TCN  FB55...  [Rescan]".
+  const capturedHtml = (keys, btn) => keys.map(k => {
+    const v = draft[k];
+    return `<div class="captured"><div><div class="label">${SCAN[k].name}</div>
+      <div class="val${v ? '' : ' none'}">${v ? esc(v) : SCAN[k].none}</div></div>
+      <button class="btn small" type="button" data-redo="${k}">${btn}</button></div>`;
+  }).join('');
+
   function setStep(s) {
     step = s; stepAt = Date.now();
-    const order = ['tcn', 'trk', 'det'];
-    document.querySelectorAll('#steps span').forEach(el => {
-      const i = order.indexOf(el.dataset.s), cur = order.indexOf(s);
-      el.className = i === cur ? 'on' : i < cur ? 'done' : '';
-    });
-    $('#scan-title').textContent = `${current.scac} · Item ${current.items.length + 1}`;
+    const order = flow(), cur = order.indexOf(s);
+    const steps = $('#steps');
+    steps.style.setProperty('--n', order.length);
+    steps.innerHTML = order.map((k, i) =>
+      `<span class="${i === cur ? 'on' : i < cur ? 'done' : ''}">${i + 1} · ${k === 'det' ? 'Details' : SCAN[k].label}</span>`).join('');
+    $('#scan-title').textContent = `${tagOf(current)} · Item ${current.items.length + 1}`;
     const scanning = s !== 'det';
     $('#p-scan').hidden = !scanning;
     $('#p-det').hidden = scanning;
@@ -836,16 +937,12 @@ button { cursor: pointer; }
     $('#type-form').hidden = true;
     $('#scan-body').scrollTop = 0;
     if (scanning) {
-      const isT = s === 'tcn';
-      $('#scan-prompt').textContent = isT ? 'Scan TCN' : 'Scan Tracking #';
-      $('#scan-hint').textContent = isT
-        ? 'Point the camera at the TCN barcode or QR code. TCNs are 17 characters.'
-        : 'Point the camera at the carrier tracking barcode.';
-      $('#btn-none').textContent = isT ? 'No TCN' : 'No Tracking #';
-      $('#type-input').placeholder = isT ? 'Type TCN' : 'Type tracking number';
-      $('#cap-tcn-mini').hidden = isT;
-      $('#cap-tcn-mini-val').innerHTML = draft.tcn ? esc(draft.tcn) : '<span class="none">No TCN</span>';
-      $('#cap-tcn-mini-val').className = 'val' + (draft.tcn ? '' : ' none');
+      const c = SCAN[s];
+      $('#scan-prompt').textContent = c.prompt;
+      $('#scan-hint').textContent = c.hint;
+      $('#btn-none').textContent = c.none;
+      $('#type-input').placeholder = c.ph;
+      $('#cap-mini').innerHTML = draft.back ? '' : capturedHtml(order.slice(0, cur), 'Redo');
       renderRecent();
       startCamera();
     } else {
@@ -857,21 +954,18 @@ button { cursor: pointer; }
   function renderRecent() {
     const last = current.items.slice(-2).reverse();
     $('#recent').innerHTML = last.length
-      ? 'Last saved: ' + last.map((it, k) => `#${current.items.length - k} ${esc(it.tcn || it.tracking || 'no codes')}`).join(' · ')
+      ? 'Last saved: ' + last.map((it, k) => `#${current.items.length - k} ${esc(it.tcn || it.tracking || it.nsn || 'no codes')}`).join(' · ')
       : '';
   }
 
   function accept(value, fromCamera) {
-    if (step === 'tcn') {
-      draft.tcn = value ? cleanTcn(value) : '';
-      if (fromCamera) beep();
-      setStep(draft.trk || draft._editingTcnOnly ? 'det' : 'trk');
-      delete draft._editingTcnOnly;
-    } else if (step === 'trk') {
-      draft.trk = value ? cleanTracking(value) : '';
-      if (fromCamera) beep();
-      setStep('det');
-    }
+    if (step === 'det') return;
+    draft[step] = value ? SCAN[step].clean(value) : '';
+    if (fromCamera) beep();
+    const order = flow();
+    const next = draft.back ? 'det' : order[order.indexOf(step) + 1];
+    draft.back = false;
+    setStep(next);
   }
 
   let lastCode = '', lastAt = 0;
@@ -880,9 +974,9 @@ button { cursor: pointer; }
     if (step === 'det' || now - stepAt < 700) return;
     if (text === lastCode && now - lastAt < 2500) return;
     lastCode = text; lastAt = now;
-    if (step === 'trk' && draft.tcn && cleanTcn(text) === draft.tcn) {
-      beep(false); toast('That is the TCN. Scan the tracking label.'); return;
-    }
+    // Reject a code already captured for a different field on this item.
+    const other = Object.keys(SCAN).find(k => k !== step && draft[k] && SCAN[step].clean(text) === draft[k]);
+    if (other) { beep(false); toast(`That is the ${SCAN[other].name}. Scan the ${SCAN[step].name}.`); return; }
     accept(text, true);
   }
 
@@ -895,15 +989,17 @@ button { cursor: pointer; }
     const v = $('#type-input').value.trim(); if (!v) return;
     $('#type-input').blur(); accept(v, false);
   });
-  $('#redo-tcn-mini').addEventListener('click', () => setStep('tcn'));
-  $('#redo-tcn').addEventListener('click', () => { draft._editingTcnOnly = true; setStep('tcn'); });
-  $('#redo-trk').addEventListener('click', () => setStep('trk'));
+  $('#cap-mini').addEventListener('click', e => {
+    const b = e.target.closest('[data-redo]'); if (b) setStep(b.dataset.redo);
+  });
+  $('#cap-list').addEventListener('click', e => {
+    const b = e.target.closest('[data-redo]'); if (b) { draft.back = true; setStep(b.dataset.redo); }
+  });
 
   // details
   function renderDetails() {
-    const ct = $('#cap-tcn'), ck = $('#cap-trk');
-    ct.textContent = draft.tcn || 'No TCN'; ct.className = 'val' + (draft.tcn ? '' : ' none');
-    ck.textContent = draft.trk || 'No tracking number'; ck.className = 'val' + (draft.trk ? '' : ' none');
+    const tally = isWeekly(current);
+    $('#cap-list').innerHTML = capturedHtml(flow().filter(k => k !== 'det'), 'Rescan');
     // duplicate + format checks
     const notes = [];
     current.items.forEach((it, i) => {
@@ -911,10 +1007,17 @@ button { cursor: pointer; }
       if (draft.trk && it.tracking === draft.trk) notes.push(`Tracking number already on item ${i + 1}.`);
     });
     if (draft.tcn && draft.tcn.length !== 17) notes.push(`TCN is ${draft.tcn.length} characters; most TCNs are 17. Check the scan.`);
+    const nsnLen = draft.nsn.replace(/-/g, '').length;
+    if (tally && draft.nsn && nsnLen !== 13) notes.push(`NSN is ${nsnLen} characters; NSNs are 13. Check the scan.`);
     $('#dup-warn').hidden = !notes.length; $('#dup-warn').textContent = notes.join(' ');
+    $('#weight-field').hidden = tally;
+    $('#ciic-field').hidden = !tally;
+    $('#loc-field').hidden = !tally;
     renderPkgChips();
+    renderCiicChips();
     $('#pieces').value = draft.pieces;
     $('#weight').value = draft.weight;
+    $('#location').value = draft.location;
   }
   function renderPkgChips() {
     const isOther = !PKG_TYPES.includes(draft.pkg);
@@ -931,6 +1034,27 @@ button { cursor: pointer; }
     if (b.dataset.v === 'Other') $('#pkg-other').focus();
   });
   $('#pkg-other').addEventListener('input', e => { draft.pkg = e.target.value.trim() || 'Other'; });
+
+  // CIIC: tap a common code (tap again to clear), or Other to type one.
+  function renderCiicChips() {
+    const isOther = draft.ciic === 'OTHER' || (draft.ciic && !CIIC_CODES.includes(draft.ciic));
+    $('#ciic-chips').innerHTML = [...CIIC_CODES, 'Other'].map(c => {
+      const on = c === 'Other' ? isOther : draft.ciic === c;
+      return `<button type="button" class="chip" data-v="${c}" aria-pressed="${on}">${c}</button>`;
+    }).join('');
+    $('#ciic-other').hidden = !isOther;
+    if (isOther) $('#ciic-other').value = draft.ciic === 'OTHER' ? '' : draft.ciic;
+  }
+  $('#ciic-chips').addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    const v = b.dataset.v;
+    draft.ciic = v === 'Other' ? 'OTHER' : draft.ciic === v ? '' : v;
+    renderCiicChips();
+    if (v === 'Other') $('#ciic-other').focus();
+  });
+  $('#ciic-other').addEventListener('input', e => { draft.ciic = e.target.value.trim().toUpperCase() || 'OTHER'; });
+  $('#location').addEventListener('input', e => { draft.location = e.target.value; });
+
   const setPieces = n => { draft.pieces = Math.max(1, n || 1); $('#pieces').value = draft.pieces; };
   $('#pc-minus').addEventListener('click', () => setPieces(draft.pieces - 1));
   $('#pc-plus').addEventListener('click', () => setPieces(draft.pieces + 1));
@@ -941,12 +1065,17 @@ button { cursor: pointer; }
     e.preventDefault();
     document.activeElement?.blur();
     setPieces(parseInt($('#pieces').value, 10));
-    draft.weight = $('#weight').value.replace(/[^0-9.]/g, '');
     const pkgType = draft.pkg === 'Other' ? 'Other' : draft.pkg;
-    current.items.push({
-      id: uid(), tcn: draft.tcn, tracking: draft.trk, pkgType,
-      pieces: draft.pieces, weight: draft.weight, scannedAt: new Date().toISOString()
-    });
+    const item = { id: uid(), tcn: draft.tcn, tracking: draft.trk, pkgType, pieces: draft.pieces, scannedAt: new Date().toISOString() };
+    if (isWeekly(current)) {
+      item.nsn = draft.nsn;
+      item.ciic = draft.ciic === 'OTHER' ? '' : draft.ciic;
+      item.location = $('#location').value.trim().toUpperCase();
+      store.lastLocation = item.location;
+    } else {
+      item.weight = $('#weight').value.replace(/[^0-9.]/g, '');
+    }
+    current.items.push(item);
     store.lastPkg = pkgType; save();
     toast(`Item ${current.items.length} saved`);
     draft = newDraft();
