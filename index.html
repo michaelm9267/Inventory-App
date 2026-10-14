@@ -162,25 +162,34 @@ button { cursor: pointer; }
 .stack { display: flex; flex-direction: column; gap: 10px; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; }
 .row > * { flex: 1 1 140px; }
+.row.tight > * { flex-basis: 90px; }
+.pick { display: flex; flex-direction: column; gap: 8px; }
+.pick .btn { justify-content: flex-start; font-family: var(--font-code); font-weight: 500; word-break: break-all; text-align: left; min-height: 48px; padding-block: 8px; }
 
 /* Scan */
 .cam {
   position: relative; background: #000; overflow: hidden;
   height: 38vh; min-height: 220px; max-height: 360px;
 }
-#reader { width: 100%; height: 100%; }
-#reader video { width: 100% !important; height: 100% !important; object-fit: cover; }
-#reader img[alt="Info icon"], #reader img[alt="Camera based scan"] { display: none !important; }
+#video { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Aiming frame: corner brackets plus a laser line; everything visible is scanned. */
+.guide { position: absolute; inset: 14% 5%; pointer-events: none; z-index: 2;
+  background:
+    linear-gradient(#fff, #fff) top left / 28px 3px no-repeat, linear-gradient(#fff, #fff) top left / 3px 28px no-repeat,
+    linear-gradient(#fff, #fff) top right / 28px 3px no-repeat, linear-gradient(#fff, #fff) top right / 3px 28px no-repeat,
+    linear-gradient(#fff, #fff) bottom left / 28px 3px no-repeat, linear-gradient(#fff, #fff) bottom left / 3px 28px no-repeat,
+    linear-gradient(#fff, #fff) bottom right / 28px 3px no-repeat, linear-gradient(#fff, #fff) bottom right / 3px 28px no-repeat; }
+.guide::after { content: ""; position: absolute; left: 3%; right: 3%; top: 50%; height: 2px; background: #ff4d3d; box-shadow: 0 0 8px #ff4d3d; opacity: .85; }
+.cam-tools { position: absolute; right: 12px; bottom: 12px; z-index: 5; display: flex; gap: 8px; }
 .cam-msg {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   padding: 24px; text-align: center; color: #e8edf2; background: #0f151c; font-size: .95rem;
 }
-.torch {
-  position: absolute; right: 12px; bottom: 12px; z-index: 5;
+.cam-tool {
   background: rgba(0,0,0,.55); color: #fff; border: 1px solid rgba(255,255,255,.4);
   border-radius: 999px; padding: 8px 14px; font-weight: 600; font-size: .85rem;
 }
-.torch[aria-pressed="true"] { background: #ffb81c; color: #16202b; }
+.cam-tool[aria-pressed="true"] { background: #ffb81c; color: #16202b; }
 .flash { position: absolute; inset: 0; pointer-events: none; border: 0 solid #3cbf74; transition: border-width .15s; z-index: 4; }
 .flash.on { border-width: 10px; }
 
@@ -301,10 +310,14 @@ button { cursor: pointer; }
     <h2 id="scan-title">Scanning</h2>
   </header>
   <div class="cam" id="cam">
-    <div id="reader"></div>
+    <video id="video" playsinline muted autoplay></video>
+    <div class="guide" aria-hidden="true"></div>
     <div class="flash" id="flash"></div>
     <div class="cam-msg" id="cam-msg">Starting camera…</div>
-    <button class="torch" id="torch" aria-pressed="false" hidden>Light</button>
+    <div class="cam-tools">
+      <button class="cam-tool" id="zoom" hidden>1×</button>
+      <button class="cam-tool" id="torch" aria-pressed="false" hidden>Light</button>
+    </div>
   </div>
   <div class="steps" id="steps"></div>
   <div class="body" id="scan-body">
@@ -314,10 +327,13 @@ button { cursor: pointer; }
       <div class="field" id="cap-mini" style="gap:8px"></div>
       <p class="prompt" id="scan-prompt">Scan TCN</p>
       <p class="hint" id="scan-hint">Point the camera at the TCN barcode or QR code.</p>
-      <div class="row">
+      <div class="row tight">
         <button class="btn" id="btn-none"></button>
         <button class="btn" id="btn-type">Type it</button>
+        <button class="btn" id="btn-photo">Photo</button>
       </div>
+      <input type="file" id="photo-input" accept="image/*" capture="environment" hidden>
+      <div class="pick" id="pick" hidden></div>
       <form class="row" id="type-form" hidden>
         <input class="input code" id="type-input" autocomplete="off" autocapitalize="characters" spellcheck="false">
         <button class="btn primary" type="submit" style="flex:0 0 auto">Use</button>
@@ -413,7 +429,7 @@ button { cursor: pointer; }
 
 <div class="toast hide" id="toast" role="status" aria-live="polite"></div>
 
-<script src="vendor/html5-qrcode.min.js"></script>
+<script src="vendor/zxing/zxing-reader.js"></script>
 <script>
 (() => {
   'use strict';
@@ -935,6 +951,7 @@ button { cursor: pointer; }
     $('#p-det').hidden = scanning;
     $('#cam').hidden = !scanning;
     $('#type-form').hidden = true;
+    $('#pick').hidden = true;
     $('#scan-body').scrollTop = 0;
     if (scanning) {
       const c = SCAN[s];
@@ -1082,65 +1099,174 @@ button { cursor: pointer; }
     setStep('tcn');
   });
 
-  // ---------- camera ----------
-  let scanner = null, camState = 'off', torchOn = false;
+  // ---------- camera + decoder ----------
+  // zxing-cpp (WebAssembly) reads long 1D codes far better than the older JS decoders.
+  const ZX = window.ZXingWASM;
+  if (ZX) {
+    try {
+      Promise.resolve(ZX.prepareZXingModule({
+        overrides: { locateFile: (path, prefix) => path.endsWith('.wasm') ? new URL('vendor/zxing/' + path, location.href).href : prefix + path },
+        fireImmediately: true
+      })).catch(() => {});
+    } catch {}
+  }
+  const READER = {
+    formats: ['Code128', 'Code39', 'Code93', 'Codabar', 'ITF', 'EANUPC', 'DataBar', 'PDF417', 'QRCode', 'DataMatrix', 'Aztec', 'MaxiCode'],
+    tryHarder: true, tryRotate: true, tryInvert: false, tryDownscale: true, maxNumberOfSymbols: 8
+  };
+  // What a good read looks like for each step, used to pick the right code off a busy label.
+  const LOOKS = {
+    tcn: t => /^[A-Z0-9]{17}$/.test(cleanTcn(t)),
+    trk: t => /^(1Z[0-9A-Z]{16}|\d{12,22}|9\d{19,25})$/.test(cleanTracking(t)),
+    nsn: t => /^\d{4}-\d{2}-\d{3}-[0-9A-Z]{4}$/.test(cleanNsn(t))
+  };
+  const NO_CHECKSUM = /^(Code39|Codabar|ITF)/; // formats that can misread: require two matching reads
+
+  const video = $('#video');
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  let stream = null, track = null, camState = 'off', looping = false, pending = '';
+  let torchOn = false, zoomSteps = [], zoomIdx = 0;
   const camMsg = m => { const el = $('#cam-msg'); el.hidden = !m; el.textContent = m || ''; };
-  async function startCamera() {
-    if (!window.Html5Qrcode) { camMsg('Scanner did not load. Use "Type it" to enter codes.'); return; }
-    if (camState === 'running') return;
-    if (camState === 'paused') {
-      try { scanner.resume(); camState = 'running'; return; } catch { /* fall through to restart */ }
-      try { await scanner.stop(); } catch {}
-      camState = 'off';
+
+  function pickBest(results, w, h) {
+    const valid = results.filter(r => r.isValid && r.text);
+    if (!valid.length) return null;
+    const fits = valid.filter(r => LOOKS[step]?.(r.text));
+    const pool = fits.length ? fits : valid;
+    const dist = r => {
+      const p = r.position;
+      const x = (p.topLeft.x + p.topRight.x + p.bottomLeft.x + p.bottomRight.x) / 4;
+      const y = (p.topLeft.y + p.topRight.y + p.bottomLeft.y + p.bottomRight.y) / 4;
+      return Math.hypot(x - w / 2, y - h / 2);
+    };
+    return pool.sort((a, b) => dist(a) - dist(b))[0];
+  }
+
+  // Part of the camera frame actually visible in the (object-fit: cover) preview.
+  function visibleRegion() {
+    const vw = video.videoWidth, vh = video.videoHeight, cw = video.clientWidth, ch = video.clientHeight;
+    if (!cw || !ch) return { x: 0, y: 0, w: vw, h: vh };
+    const k = Math.max(cw / vw, ch / vh);
+    const w = Math.min(vw, cw / k), h = Math.min(vh, ch / k);
+    return { x: (vw - w) / 2, y: (vh - h) / 2, w, h };
+  }
+
+  async function scanLoop() {
+    if (looping) return;
+    looping = true;
+    while (camState === 'running') {
+      if (video.readyState >= 2 && video.videoWidth) {
+        const r = visibleRegion();
+        const k = Math.min(1, 1600 / Math.max(r.w, r.h));
+        canvas.width = Math.round(r.w * k); canvas.height = Math.round(r.h * k);
+        ctx.drawImage(video, r.x, r.y, r.w, r.h, 0, 0, canvas.width, canvas.height);
+        try {
+          const res = await ZX.readBarcodes(ctx.getImageData(0, 0, canvas.width, canvas.height), READER);
+          if (camState === 'running' && step !== 'det') {
+            const best = pickBest(res, canvas.width, canvas.height);
+            if (!best) pending = '';
+            else if (NO_CHECKSUM.test(best.format) && pending !== best.text) pending = best.text;
+            else { pending = ''; onDecode(best.text); }
+          }
+        } catch {}
+      }
+      await new Promise(r => setTimeout(r, 30));
     }
-    if (camState === 'starting') return;
+    looping = false;
+  }
+
+  async function startCamera() {
+    if (camState === 'running' || camState === 'starting') return;
+    if (camState === 'paused' && track && track.readyState === 'live') {
+      camState = 'running'; video.play().catch(() => {}); scanLoop(); return;
+    }
+    if (!ZX) { camMsg('Scanner did not load. Use "Type it" to enter codes.'); return; }
+    if (!navigator.mediaDevices?.getUserMedia) {
+      camMsg('Camera needs a secure (https) address. Open the app from its https link, or use "Type it".'); return;
+    }
     camState = 'starting'; camMsg('Starting camera…');
     try {
-      if (!scanner) {
-        const F = Html5QrcodeSupportedFormats;
-        scanner = new Html5Qrcode('reader', {
-          verbose: false,
-          formatsToSupport: [F.QR_CODE, F.CODE_128, F.CODE_39, F.CODE_93, F.PDF_417, F.DATA_MATRIX, F.ITF, F.CODABAR, F.EAN_13, F.UPC_A],
-          experimentalFeatures: { useBarCodeDetectorIfSupported: true }
-        });
-      }
-      await scanner.start(
-        { facingMode: 'environment' },
-        { fps: 12, disableFlip: true, qrbox: (w, h) => ({ width: Math.max(60, Math.floor(w * 0.9)), height: Math.max(60, Math.floor(Math.min(h * 0.7, w * 0.6))) }) },
-        onDecode, () => {}
-      );
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+      });
+      track = stream.getVideoTracks()[0];
+      try { await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }); } catch {}
+      // iOS can end the stream when the photo camera opens; restart when we come back.
+      track.addEventListener('ended', () => {
+        stopCamera();
+        if (!$('#s-scan').hidden && step !== 'det') startCamera();
+      });
+      video.srcObject = stream;
+      await video.play();
+      if ($('#s-scan').hidden) { stopCamera(); return; }
       camState = 'running'; camMsg('');
-      if (step === 'det') pauseCamera();
-      setupTorch();
+      setupTools();
+      if (step === 'det') pauseCamera(); else scanLoop();
     } catch (err) {
-      camState = 'off';
-      const insecure = !window.isSecureContext;
-      camMsg(insecure
+      stopCamera();
+      camMsg(!window.isSecureContext
         ? 'Camera needs a secure (https) address. Open the app from its https link, or use "Type it".'
         : 'Camera unavailable. Allow camera access for this site in your browser settings, or use "Type it".');
     }
   }
   function pauseCamera() {
-    if (camState === 'running') { try { scanner.pause(true); camState = 'paused'; } catch {} }
+    if (camState === 'running') { camState = 'paused'; video.pause(); }
   }
-  async function stopCamera() {
-    if (scanner && (camState === 'running' || camState === 'paused')) {
-      try { await scanner.stop(); } catch {}
-    }
-    if (camState !== 'starting') camState = 'off';
-    torchOn = false; $('#torch').hidden = true;
+  function stopCamera() {
+    camState = 'off';
+    try { stream?.getTracks().forEach(t => t.stop()); } catch {}
+    stream = null; track = null; video.srcObject = null;
+    torchOn = false; $('#torch').hidden = true; $('#zoom').hidden = true;
   }
-  function setupTorch() {
-    try {
-      const caps = scanner.getRunningTrackCapabilities?.();
-      $('#torch').hidden = !(caps && caps.torch);
-    } catch { $('#torch').hidden = true; }
+  function setupTools() {
+    let caps = {};
+    try { caps = track.getCapabilities?.() || {}; } catch {}
+    $('#torch').hidden = !caps.torch;
+    $('#torch').setAttribute('aria-pressed', 'false');
+    const z = caps.zoom;
+    zoomSteps = z ? [1, 2, 3].filter(v => v >= (z.min || 1) && v <= z.max) : [];
+    zoomIdx = 0;
+    $('#zoom').hidden = zoomSteps.length < 2;
+    $('#zoom').textContent = '1×';
   }
   $('#torch').addEventListener('click', async () => {
     torchOn = !torchOn;
-    try { await scanner.applyVideoConstraints({ advanced: [{ torch: torchOn }] }); }
-    catch { torchOn = false; }
+    try { await track.applyConstraints({ advanced: [{ torch: torchOn }] }); } catch { torchOn = false; }
     $('#torch').setAttribute('aria-pressed', torchOn);
+  });
+  $('#zoom').addEventListener('click', async () => {
+    zoomIdx = (zoomIdx + 1) % zoomSteps.length;
+    try { await track.applyConstraints({ advanced: [{ zoom: zoomSteps[zoomIdx] }] }); } catch {}
+    $('#zoom').textContent = zoomSteps[zoomIdx] + '×';
+  });
+
+  // Photo fallback: the phone's own camera takes a full-resolution still, which reads very long codes.
+  $('#btn-photo').addEventListener('click', () => { $('#photo-input').value = ''; $('#photo-input').click(); });
+  $('#photo-input').addEventListener('change', async e => {
+    const file = e.target.files && e.target.files[0];
+    if (!file || !ZX) return;
+    toast('Reading photo…');
+    try {
+      const res = (await ZX.readBarcodes(file, { ...READER, tryInvert: true, maxNumberOfSymbols: 16 }))
+        .filter(r => r.isValid && r.text);
+      const fits = res.filter(r => LOOKS[step]?.(r.text));
+      const choices = [...new Set((fits.length ? fits : res).map(r => r.text))];
+      if (!choices.length) { beep(false); toast('No barcode found. Move closer and keep the label sharp.'); }
+      else if (choices.length === 1) { lastCode = ''; onDecode(choices[0]); }
+      else {
+        const pick = $('#pick');
+        pick.innerHTML = `<div class="label">Found ${choices.length} codes. Tap the ${SCAN[step].name}:</div>` +
+          choices.map((t, i) => `<button class="btn" type="button" data-i="${i}">${esc(t.length > 60 ? t.slice(0, 60) + '…' : t)}</button>`).join('');
+        pick.hidden = false;
+        pick.onclick = ev => {
+          const b = ev.target.closest('[data-i]'); if (!b) return;
+          pick.hidden = true; lastCode = ''; onDecode(choices[+b.dataset.i]);
+        };
+      }
+    } catch { toast('Could not read that photo. Try again or use "Type it".'); }
+    if (!$('#s-scan').hidden && step !== 'det' && (!track || track.readyState !== 'live')) { stopCamera(); startCamera(); }
   });
 
   // keep the screen on while scanning

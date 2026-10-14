@@ -1,10 +1,11 @@
 // Network-first for the app's own files, falling back to cache so the app works offline.
-const CACHE = 'inventory-v5';
+const CACHE = 'inventory-v6';
 const ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './vendor/html5-qrcode.min.js',
+  './vendor/zxing/zxing-reader.js',
+  './vendor/zxing/zxing_reader.wasm',
   './vendor/exceljs.min.js',
   './vendor/jspdf.umd.min.js',
   './vendor/jspdf.plugin.autotable.min.js',
