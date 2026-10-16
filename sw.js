@@ -1,5 +1,5 @@
 // Network-first for the app's own files, falling back to cache so the app works offline.
-const CACHE = 'inventory-v6';
+const CACHE = 'inventory-v8';
 const ASSETS = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const ASSETS = [
   './vendor/exceljs.min.js',
   './vendor/jspdf.umd.min.js',
   './vendor/jspdf.plugin.autotable.min.js',
+  './vendor/pdf-lib.min.js',
   './icons/icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png'

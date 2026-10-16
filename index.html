@@ -246,6 +246,17 @@ button { cursor: pointer; }
 .kind b { font: 700 1.5rem/1 var(--font-display); text-transform: uppercase; letter-spacing: .02em; color: var(--accent); }
 .kind span { font-size: .8rem; line-height: 1.35; opacity: .8; }
 .kind:active { transform: translateY(1px); }
+.kinds .kind:last-child:nth-child(odd) { grid-column: 1 / -1; min-height: 84px; }
+.cust-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 12px; background: var(--chip); border-bottom: 1px solid var(--line);
+}
+.cust-head > div { min-width: 0; display: flex; flex-direction: column; }
+.cust-head b { font: 700 1.15rem/1.15 var(--font-display); text-transform: uppercase; overflow-wrap: anywhere; }
+.cust-head span { font-size: .82rem; color: var(--muted); }
+.cust-pick { display: flex; flex-direction: column; gap: 8px; }
+.cust-pick .btn { justify-content: space-between; text-align: left; gap: 12px; }
+.cust-pick .btn small { color: var(--muted); font-weight: 500; }
 .kind-tag { font: 700 .7rem/1 var(--font-body); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .ciic-chips .chip { min-width: 48px; font-family: var(--font-code); }
 @media (max-width: 380px) { .two { grid-template-columns: 1fr; } }
@@ -262,6 +273,7 @@ button { cursor: pointer; }
     <div class="kinds" id="kinds">
       <button class="kind" data-kind="tally"><b>Tally Sheet</b><span>SCAC · TCN · Tracking · Package · Pieces · Weight</span></button>
       <button class="kind" data-kind="weekly"><b>Weekly Inventory</b><span>TCN · Tracking · NSN · Package · Pieces · CIIC · Location</span></button>
+      <button class="kind" data-kind="pickup"><b>Customer Pickup</b><span>POC · Unit · TCN · Tracking · Pieces · Weight · Location · Carrier. Prints a tally sheet per customer.</span></button>
     </div>
     <div class="label">Lists on this phone</div>
     <div id="home-lists" class="stack"></div>
@@ -273,7 +285,7 @@ button { cursor: pointer; }
   <header class="topbar"><button id="new-back">Cancel</button><h2 id="new-title">New List</h2></header>
   <form class="body" id="new-form" novalidate>
     <div class="field">
-      <label class="label" for="new-member">Member name</label>
+      <label class="label" for="new-member" id="new-member-label">Member name</label>
       <input class="input" id="new-member" autocomplete="name" placeholder="Who is building this list?" required>
     </div>
     <div class="field" id="scac-field">
@@ -322,6 +334,41 @@ button { cursor: pointer; }
   <div class="steps" id="steps"></div>
   <div class="body" id="scan-body">
 
+    <div class="captured" id="cust-bar" hidden>
+      <div><div class="label">Customer</div><div class="val" id="cust-bar-val"></div></div>
+      <button class="btn small" type="button" id="cust-change">Change</button>
+    </div>
+
+    <!-- step: customer (pickup lists) -->
+    <form id="p-cust" class="field" style="gap:14px" hidden novalidate>
+      <p class="prompt">Who is picking up?</p>
+      <div class="field" id="cust-existing" hidden>
+        <span class="label">Customers on this list</span>
+        <div class="cust-pick" id="cust-pick"></div>
+        <span class="label" style="margin-top:6px">Or a new customer</span>
+      </div>
+      <div class="field">
+        <label class="label" for="c-poc">POC</label>
+        <input class="input" id="c-poc" autocomplete="off" autocapitalize="words" placeholder="Point of contact name">
+      </div>
+      <div class="field">
+        <label class="label" for="c-unit">Unit</label>
+        <input class="input code" id="c-unit" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. 1-23 IN">
+      </div>
+      <div class="two">
+        <div class="field">
+          <label class="label" for="c-phone">Phone</label>
+          <input class="input" id="c-phone" type="tel" inputmode="tel" autocomplete="off" placeholder="555-123-4567">
+        </div>
+        <div class="field">
+          <label class="label" for="c-email">Email</label>
+          <input class="input" id="c-email" type="email" inputmode="email" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="name@mail.mil">
+        </div>
+      </div>
+      <p class="hint" id="c-err" style="color:var(--danger)" hidden></p>
+      <button class="btn primary block" type="submit">Start Scanning</button>
+    </form>
+
     <!-- step: TCN / tracking (shared scan panel) -->
     <div id="p-scan" class="field" style="gap:14px">
       <div class="field" id="cap-mini" style="gap:8px"></div>
@@ -345,7 +392,7 @@ button { cursor: pointer; }
     <form id="p-det" class="field" style="gap:14px" hidden novalidate>
       <div class="field" id="cap-list" style="gap:8px"></div>
       <div class="warnbox" id="dup-warn" hidden></div>
-      <div class="field">
+      <div class="field" id="pkg-field">
         <span class="label" id="pkg-label">Package type</span>
         <div class="chips" id="pkg-chips" role="group" aria-labelledby="pkg-label"></div>
         <input class="input" id="pkg-other" placeholder="Describe package type" hidden>
@@ -373,6 +420,15 @@ button { cursor: pointer; }
         <label class="label" for="location">Location</label>
         <input class="input code" id="location" placeholder="e.g. A-12-03" autocomplete="off" autocapitalize="characters" spellcheck="false">
       </div>
+      <div class="field" id="carrier-field">
+        <span class="label" id="carrier-label">Carrier</span>
+        <div class="chips" id="carrier-chips" role="group" aria-labelledby="carrier-label"></div>
+        <input class="input code" id="carrier-other" placeholder="Type carrier SCAC" maxlength="4" autocapitalize="characters" hidden>
+      </div>
+      <div class="field" id="arr-field">
+        <label class="label" for="arr-date">Arr date</label>
+        <input class="input code" id="arr-date" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="15OCT">
+      </div>
       <button class="btn primary block" type="submit">Save &amp; Scan Next</button>
     </form>
   </div>
@@ -382,6 +438,14 @@ button { cursor: pointer; }
 <div class="sheet-wrap" id="edit-wrap" hidden>
   <form class="sheet" id="edit-form" novalidate>
     <h3 id="edit-title">Edit Item</h3>
+    <div class="two" data-kinds="pickup">
+      <div class="field"><label class="label" for="e-poc">POC</label><input class="input" id="e-poc"></div>
+      <div class="field"><label class="label" for="e-unit">Unit</label><input class="input code" id="e-unit" autocapitalize="characters"></div>
+    </div>
+    <div class="two" data-kinds="pickup">
+      <div class="field"><label class="label" for="e-phone">Phone</label><input class="input" id="e-phone" type="tel" inputmode="tel"></div>
+      <div class="field"><label class="label" for="e-email">Email</label><input class="input" id="e-email" type="email" inputmode="email" autocapitalize="none"></div>
+    </div>
     <div class="field">
       <label class="label" for="e-tcn">TCN (leave blank for No TCN)</label>
       <input class="input code" id="e-tcn" autocapitalize="characters" spellcheck="false">
@@ -390,22 +454,26 @@ button { cursor: pointer; }
       <label class="label" for="e-trk">Tracking number (leave blank for none)</label>
       <input class="input code" id="e-trk" autocapitalize="characters" spellcheck="false">
     </div>
-    <div class="field" data-tally>
+    <div class="field" data-kinds="weekly">
       <label class="label" for="e-nsn">NSN (leave blank for No NSN)</label>
       <input class="input code" id="e-nsn" autocapitalize="characters" spellcheck="false">
     </div>
-    <div class="field">
+    <div class="field" data-kinds="tally weekly">
       <label class="label" for="e-pkg">Package type</label>
       <input class="input" id="e-pkg">
     </div>
     <div class="two">
       <div class="field"><label class="label" for="e-pcs">Piece count</label><input class="input" id="e-pcs" inputmode="numeric"></div>
-      <div class="field" data-weekly><label class="label" for="e-wt">Weight (lb)</label><input class="input" id="e-wt" inputmode="decimal"></div>
-      <div class="field" data-tally><label class="label" for="e-ciic">CIIC</label><input class="input code" id="e-ciic" maxlength="1" autocapitalize="characters"></div>
+      <div class="field" data-kinds="tally pickup"><label class="label" for="e-wt">Weight (lb)</label><input class="input" id="e-wt" inputmode="decimal"></div>
+      <div class="field" data-kinds="weekly"><label class="label" for="e-ciic">CIIC</label><input class="input code" id="e-ciic" maxlength="1" autocapitalize="characters"></div>
     </div>
-    <div class="field" data-tally>
+    <div class="field" data-kinds="weekly pickup">
       <label class="label" for="e-loc">Location</label>
       <input class="input code" id="e-loc" autocapitalize="characters" spellcheck="false">
+    </div>
+    <div class="two" data-kinds="pickup">
+      <div class="field"><label class="label" for="e-carrier">Carrier</label><input class="input code" id="e-carrier" maxlength="4" autocapitalize="characters"></div>
+      <div class="field"><label class="label" for="e-arr">Arr date</label><input class="input code" id="e-arr" maxlength="5" autocapitalize="characters"></div>
     </div>
     <button class="btn primary block" type="submit">Save Changes</button>
     <div class="row">
@@ -420,7 +488,7 @@ button { cursor: pointer; }
   <div class="sheet" role="dialog" aria-labelledby="export-title">
     <h3 id="export-title">Export List</h3>
     <p class="hint" id="export-sum"></p>
-    <button class="btn export-opt" data-fmt="pdf"><b>PDF</b><span>Printable report with header and totals</span></button>
+    <button class="btn export-opt" data-fmt="pdf"><b id="pdf-opt-title">PDF</b><span id="pdf-opt-sub">Printable report with header and totals</span></button>
     <button class="btn export-opt" data-fmt="xlsx"><b>Excel</b><span>.xlsx spreadsheet, opens in Excel or Sheets</span></button>
     <button class="btn export-opt" data-fmt="csv"><b>CSV</b><span>Plain data file for uploading to other systems</span></button>
     <button class="btn" id="export-cancel">Cancel</button>
@@ -436,16 +504,18 @@ button { cursor: pointer; }
   const COMMON_SCACS = ['FDE', 'UPSN', 'PAZC'];
   const PKG_TYPES = ['Box', 'Pallet', 'Envelope', 'Crate', 'Tube', 'Bag', 'Drum'];
   const CIIC_CODES = ['U', 'J', '7', '9', 'Q', 'R'];
-  const KINDS = { tally: 'Tally Sheet', weekly: 'Weekly Inventory' };
+  const KINDS = { tally: 'Tally Sheet', weekly: 'Weekly Inventory', pickup: 'Customer Pickup' };
   const isWeekly = l => l && l.kind === 'weekly';
-  const tagOf = l => isWeekly(l) ? 'WEEKLY' : l.scac;
+  const isPickup = l => l && l.kind === 'pickup';
+  const hasScac = l => l && l.kind === 'tally';
+  const tagOf = l => isWeekly(l) ? 'WEEKLY' : isPickup(l) ? 'PICKUP' : l.scac;
   const KEY = 'inventory-scan.v1';
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
   // ---------- storage ----------
-  let store = { lists: [], lastMember: '', lastPkg: 'Box', lastLocation: '' };
+  let store = { lists: [], lastMember: '', lastPkg: 'Box', lastLocation: '', lastCarrier: '' };
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.lists)) store = Object.assign(store, s); } catch {}
   store.lists.forEach(l => { if (!l.kind) l.kind = 'tally'; });
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch {} };
@@ -518,7 +588,7 @@ button { cursor: pointer; }
     const el = $('#home-lists');
     const lists = [...store.lists].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     if (!lists.length) {
-      el.innerHTML = `<div class="empty"><strong>No lists yet</strong>Choose <b>Tally Sheet</b> or <b>Weekly Inventory</b> above, enter your name, then start scanning.</div>`;
+      el.innerHTML = `<div class="empty"><strong>No lists yet</strong>Choose a list type above, enter your name, then start scanning.</div>`;
       return;
     }
     el.innerHTML = lists.map(l => {
@@ -555,7 +625,8 @@ button { cursor: pointer; }
     const k = e.target.closest('.kind'); if (!k) return;
     newKind = k.dataset.kind;
     $('#new-title').textContent = 'New ' + KINDS[newKind];
-    $('#scac-field').hidden = newKind === 'weekly';
+    $('#scac-field').hidden = newKind !== 'tally';
+    $('#new-member-label').textContent = newKind === 'pickup' ? 'In-checker name' : 'Member name';
     newScac = ''; renderScacChips();
     $('#new-member').value = store.lastMember || '';
     $('#new-scac-other').value = '';
@@ -569,8 +640,8 @@ button { cursor: pointer; }
   $('#new-form').addEventListener('submit', e => {
     e.preventDefault();
     const member = $('#new-member').value.trim();
-    const scac = newKind === 'weekly' ? '' : newScac === 'OTHER' ? $('#new-scac-other').value.trim().toUpperCase() : newScac;
-    const err = !member ? 'Enter the member name.' : (!scac && newKind !== 'weekly') ? 'Choose a SCAC, or tap Other and type one.' : '';
+    const scac = newKind !== 'tally' ? '' : newScac === 'OTHER' ? $('#new-scac-other').value.trim().toUpperCase() : newScac;
+    const err = !member ? 'Enter your name.' : (!scac && newKind === 'tally') ? 'Choose a SCAC, or tap Other and type one.' : '';
     if (err) { $('#new-err').textContent = err; $('#new-err').hidden = false; return; }
     clearInterval(stampTimer);
     const list = { id: uid(), kind: newKind, member, scac, createdAt: new Date().toISOString(), items: [] };
@@ -584,23 +655,44 @@ button { cursor: pointer; }
   function renderList() {
     const l = current, t = totals(l);
     $('#list-title').textContent = `${tagOf(l)} · ${l.items.length} items`;
-    $('#list-meta').innerHTML = `<dt>Type</dt><dd>${KINDS[l.kind]}</dd><dt>Member</dt><dd>${esc(l.member)}</dd>${isWeekly(l) ? '' : `<dt>SCAC</dt><dd class="code">${esc(l.scac)}</dd>`}<dt>Created</dt><dd>${esc(fmtDate(l.createdAt))}</dd>`;
-    $('#list-totals').innerHTML = `
+    $('#list-meta').innerHTML = `<dt>Type</dt><dd>${KINDS[l.kind]}</dd><dt>${isPickup(l) ? 'In-checker' : 'Member'}</dt><dd>${esc(l.member)}</dd>${hasScac(l) ? `<dt>SCAC</dt><dd class="code">${esc(l.scac)}</dd>` : ''}<dt>Created</dt><dd>${esc(fmtDate(l.createdAt))}</dd>`;
+    $('#list-totals').innerHTML = isPickup(l) ? `
+      <div class="total"><b>${customersOf(l).length}</b><span>Customers</span></div>
+      <div class="total"><b>${t.items}</b><span>Items</span></div>
+      <div class="total"><b>${t.pieces}</b><span>Pieces</span></div>` : `
       <div class="total"><b>${t.items}</b><span>Items</span></div>
       <div class="total"><b>${t.pieces}</b><span>Pieces</span></div>
       ${isWeekly(l)
         ? `<div class="total"><b>${new Set(l.items.map(i => i.location).filter(Boolean)).size}</b><span>Locations</span></div>`
         : `<div class="total"><b>${fmtWt(t.weight)}</b><span>Total lb</span></div>`}`;
-    $('#list-items').innerHTML = l.items.length ? l.items.map((it, i) => `
+    const empty = `<div class="empty" style="border:0"><strong>No items</strong>Tap Scan Items to add the first one.</div>`;
+    if (isPickup(l)) {
+      const cs = customersOf(l);
+      $('#list-items').innerHTML = cs.length ? cs.map((c, ci) => `
+        <div class="cust-head">
+          <div><b>${esc(c.poc || 'No POC')}</b><span>${esc(c.unit || 'No unit')} · ${c.items.length} item${c.items.length === 1 ? '' : 's'}, ${c.items.reduce((a, x) => a + (+x.it.pieces || 0), 0)} pcs</span></div>
+          <button class="btn small" type="button" data-sheet="${ci}">Sheet PDF</button>
+        </div>
+        ${c.items.map(x => itemHtml(l, x.it, x.i)).join('')}`).join('') : empty;
+    } else {
+      $('#list-items').innerHTML = l.items.length ? l.items.map((it, i) => itemHtml(l, it, i)).join('') : empty;
+    }
+  }
+  function itemHtml(l, it, i) {
+    const pcs = `${it.pieces} pc${it.pieces == 1 ? '' : 's'}`;
+    const det = isPickup(l)
+      ? [it.arrDate, pcs, it.weight ? esc(it.weight) + ' lb' : '', esc(it.location), esc(it.carrier)].filter(Boolean).join(' · ')
+      : `${esc(it.pkgType)} · ${pcs}${isWeekly(l)
+          ? (it.ciic ? ' · CIIC ' + esc(it.ciic) : '') + (it.location ? ' · ' + esc(it.location) : '')
+          : (it.weight ? ' · ' + esc(it.weight) + ' lb' : '')}`;
+    return `
       <button class="item" data-i="${i}">
         <span class="n">${i + 1}</span>
         <span class="line"><i>TCN</i>${it.tcn ? esc(it.tcn) : '<span class="none">No TCN</span>'}</span>
         <span class="line"><i>Trk</i>${it.tracking ? esc(it.tracking) : '<span class="none">No tracking #</span>'}</span>
         ${isWeekly(l) ? `<span class="line"><i>NSN</i>${it.nsn ? esc(it.nsn) : '<span class="none">No NSN</span>'}</span>` : ''}
-        <span class="det">${esc(it.pkgType)} · ${it.pieces} pc${it.pieces == 1 ? '' : 's'}${isWeekly(l)
-          ? (it.ciic ? ' · CIIC ' + esc(it.ciic) : '') + (it.location ? ' · ' + esc(it.location) : '')
-          : (it.weight ? ' · ' + esc(it.weight) + ' lb' : '')}</span>
-      </button>`).join('') : `<div class="empty" style="border:0"><strong>No items</strong>Tap Scan Items to add the first one.</div>`;
+        <span class="det">${det}</span>
+      </button>`;
   }
   $('#list-back').addEventListener('click', () => { renderHome(); show('s-home'); });
   $('#btn-scan').addEventListener('click', () => startScan());
@@ -608,7 +700,17 @@ button { cursor: pointer; }
     store.lists = store.lists.filter(l => l !== current); save();
     toast('List deleted'); renderHome(); show('s-home');
   }));
-  $('#list-items').addEventListener('click', e => {
+  $('#list-items').addEventListener('click', async e => {
+    const sh = e.target.closest('[data-sheet]');
+    if (sh) {
+      if (sh.getAttribute('aria-busy') === 'true') return;
+      const c = customersOf(current)[+sh.dataset.sheet];
+      sh.setAttribute('aria-busy', 'true');
+      try { await deliver(await toBinder(current, c.key), `${listTitle(current)}-${safeName(c.poc || 'CUSTOMER')}.pdf`); }
+      catch { toast('Could not build the sheet. Try again.'); }
+      finally { sh.removeAttribute('aria-busy'); }
+      return;
+    }
     const b = e.target.closest('.item'); if (b) openEdit(+b.dataset.i);
   });
 
@@ -634,6 +736,21 @@ button { cursor: pointer; }
       { h: 'Location', w: 16, pdf: 84, v: it => it.location || '' }
     ]
   };
+  COLS.pickup = [
+    { h: 'Item #', w: 8, pdf: 34, v: (it, i) => i + 1 },
+    { h: 'POC', w: 20, v: it => it.poc || '' },
+    { h: 'Unit', w: 14, v: it => it.unit || '' },
+    { h: 'Phone', w: 15, v: it => it.phone || '' },
+    { h: 'Email', w: 24, v: it => it.email || '' },
+    { h: 'Arr Date', w: 10, v: it => it.arrDate || '' },
+    { h: 'TCN', w: 24, code: true, v: it => it.tcn || 'NO TCN' },
+    { h: 'Tracking Number', w: 24, code: true, v: it => it.tracking || 'NO TRACKING NUMBER' },
+    { h: 'PCS', w: 7, pieces: true, v: it => +it.pieces || 1 },
+    { h: 'WT (lb)', w: 9, weight: true, v: it => it.weight === '' || it.weight == null ? null : (parseFloat(it.weight) || 0) },
+    { h: 'Location', w: 12, v: it => it.location || '' },
+    { h: 'Carrier', w: 9, v: it => it.carrier || '' },
+    { h: 'In-Checker', w: 16, v: it => it.inChecker || '' }
+  ];
   const cols = l => COLS[l.kind] || COLS.tally;
   const isMissing = v => typeof v === 'string' && /^NO (TCN|TRACKING|NSN)/.test(v);
 
@@ -648,7 +765,7 @@ button { cursor: pointer; }
   function toCsv(l) {
     const q = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
     const cs = cols(l);
-    const scac = !isWeekly(l);
+    const scac = hasScac(l);
     const head = ['List Type', 'List Created', 'Member', ...(scac ? ['SCAC'] : []), ...cs.map(c => c.h), 'Scanned At'];
     const rows = l.items.map((it, i) => [KINDS[l.kind], csvDate(l.createdAt), l.member, ...(scac ? [l.scac] : []), ...cs.map(c => c.v(it, i)), csvDate(it.scannedAt)]);
     return [head, ...rows].map(r => r.map(q).join(',')).join('\r\n') + '\r\n';
@@ -656,7 +773,7 @@ button { cursor: pointer; }
 
   // Shared report pieces: title like FDE13OCT2026, date 13-Oct-26, time 22:45.
   const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const listTitle = l => { const d = new Date(l.createdAt); return `${isWeekly(l) ? 'INV' : l.scac}${pad(d.getDate())}${MON[d.getMonth()].toUpperCase()}${d.getFullYear()}`; };
+  const listTitle = l => { const d = new Date(l.createdAt); return `${isWeekly(l) ? 'INV' : isPickup(l) ? 'PU' : l.scac}${pad(d.getDate())}${MON[d.getMonth()].toUpperCase()}${d.getFullYear()}`; };
   const fileName = l => listTitle(l);
   const repDate = iso => { const d = new Date(iso); return `${pad(d.getDate())}-${MON[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`; };
   const repTime = iso => { const d = new Date(iso); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
@@ -678,7 +795,7 @@ button { cursor: pointer; }
     wb.creator = l.member; wb.created = new Date();
     const ws = wb.addWorksheet(title, {
       views: [{ state: 'frozen', ySplit: 7, showGridLines: false }],
-      pageSetup: { paperSize: 1, orientation: isWeekly(l) ? 'landscape' : 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0,
+      pageSetup: { paperSize: 1, orientation: cols(l).length > 6 ? 'landscape' : 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0,
         horizontalCentered: true, printTitlesRow: '7:7',
         margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.6, header: 0.3, footer: 0.3 } },
       headerFooter: { oddFooter: `&L&8${title} · ${KINDS[l.kind]} · ${l.member}&R&8Page &P of &N` }
@@ -713,8 +830,8 @@ button { cursor: pointer; }
       if (numFmt) vc.numFmt = numFmt;
     };
     const RL = L(nc - 2), RV = L(nc - 1); // right-hand label / value columns
-    pair('A4', 'B4', null, 'Member', l.member);
-    if (!isWeekly(l)) pair('A5', 'B5', null, 'SCAC', l.scac);
+    pair('A4', 'B4', null, isPickup(l) ? 'In-Checker' : 'Member', l.member);
+    if (hasScac(l)) pair('A5', 'B5', null, 'SCAC', l.scac);
     pair(`${RL}4`, `${RV}4`, `${END}4`, 'Date', xlDate, 'dd-mmm-yy');
     pair(`${RL}5`, `${RV}5`, `${END}5`, 'Time', xlDate, 'hh:mm');
     ws.getRow(4).height = 20; ws.getRow(5).height = 20;
@@ -765,7 +882,7 @@ button { cursor: pointer; }
     await loadScript('vendor/jspdf.plugin.autotable.min.js');
     const { jsPDF } = window.jspdf;
     if (!jsPDF.API.autoTable && window.applyPlugin) window.applyPlugin(jsPDF);
-    const doc = new jsPDF({ unit: 'pt', format: 'letter', orientation: isWeekly(l) ? 'landscape' : 'portrait' });
+    const doc = new jsPDF({ unit: 'pt', format: 'letter', orientation: cols(l).length > 6 ? 'landscape' : 'portrait' });
     const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 40;
     const title = listTitle(l), t = totals(l), cs = cols(l);
     const NAVY = [22, 32, 43], SLATE = [52, 70, 90], MUTED = [91, 104, 120], LINE = [201, 209, 218], LABEL = [233, 237, 241];
@@ -792,7 +909,7 @@ button { cursor: pointer; }
     };
     const RX = W - M - LW - VW;
     pair(M, 92, 'Member', l.member);
-    if (!isWeekly(l)) pair(M, 92 + BH, 'SCAC', l.scac);
+    if (hasScac(l)) pair(M, 92 + BH, 'SCAC', l.scac);
     pair(RX, 92, 'Date', repDate(l.createdAt));
     pair(RX, 92 + BH, 'Time', repTime(l.createdAt));
 
@@ -838,6 +955,200 @@ button { cursor: pointer; }
     return doc.output('blob');
   }
 
+  // ---------- customer pickup: tally sheet binder ----------
+  const custKey = it => `${(it.poc || '').trim().toUpperCase()}|${(it.unit || '').trim().toUpperCase()}`;
+  const safeName = s => s.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) || 'CUSTOMER';
+  // Customers in the order first scanned, each with its items (and their list index).
+  function customersOf(l) {
+    const map = new Map();
+    l.items.forEach((it, i) => {
+      const k = custKey(it);
+      if (!map.has(k)) map.set(k, { key: k, poc: it.poc || '', unit: it.unit || '', phone: '', email: '', items: [] });
+      const c = map.get(k);
+      c.phone = c.phone || it.phone || '';
+      c.email = c.email || it.email || '';
+      c.items.push({ it, i });
+    });
+    return [...map.values()];
+  }
+  const SHEET_ROWS = 12;
+
+  async function toBinder(l, onlyKey) {
+    await loadScript('vendor/jspdf.umd.min.js');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+    const custs = customersOf(l).filter(c => !onlyKey || c.key === onlyKey);
+    const fields = [];
+    let first = true;
+    for (const c of custs) {
+      const sheets = Math.max(1, Math.ceil(c.items.length / SHEET_ROWS));
+      for (let s = 0; s < sheets; s++) {
+        if (!first) doc.addPage();
+        first = false;
+        drawTallySheet(doc, l, c, c.items.slice(s * SHEET_ROWS, (s + 1) * SHEET_ROWS).map(x => x.it), s + 1, sheets, fields);
+      }
+    }
+    if (first) drawTallySheet(doc, l, { poc: '', unit: '' }, [], 1, 1, fields);
+    const pages = doc.getNumberOfPages();
+    for (let p = 1; p <= pages; p++) {
+      doc.setPage(p);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(120, 120, 120);
+      doc.text(`${listTitle(l)} · In-checker ${l.member}`, 28, 770);
+      doc.text(`Page ${p} of ${pages}`, 584, 770, { align: 'right' });
+    }
+    return addFormFields(doc.output('arraybuffer'), fields, doc.internal.pageSize.getHeight());
+  }
+
+  // Turn the collected boxes into real, fillable PDF form fields (prefilled with scanned data).
+  async function addFormFields(bytes, fields, pageH) {
+    await loadScript('vendor/pdf-lib.min.js');
+    const { PDFDocument, StandardFonts, TextAlignment, PDFName, PDFString, PDFNumber } = window.PDFLib;
+    const pdf = await PDFDocument.load(bytes);
+    const form = pdf.getForm();
+    const font = await pdf.embedFont(StandardFonts.Helvetica);
+    const pages = pdf.getPages();
+    const noBox = { backgroundColor: undefined, borderColor: undefined, borderWidth: 0 };
+    for (const f of fields) {
+      const rect = { x: f.x, y: pageH - f.y - f.h, width: f.w, height: f.h, ...noBox };
+      if (f.check) {
+        form.createCheckBox(f.name).addToPage(pages[f.page], rect);
+        continue;
+      }
+      const tf = form.createTextField(f.name);
+      if (f.multiline) tf.enableMultiline();
+      tf.addToPage(pages[f.page], { ...rect, font });
+      // Long prefilled values shrink to fit their box.
+      let size = f.size || 10;
+      while (size > 5 && f.value && font.widthOfTextAtSize(f.value, size) > f.w - 4) size -= 0.5;
+      tf.setFontSize(size);
+      tf.setAlignment(f.align === 'center' ? TextAlignment.Center : TextAlignment.Left);
+      if (f.value) tf.setText(f.value);
+      // Apple's viewers read size/alignment from the widget itself, so mirror them there.
+      for (const w of tf.acroField.getWidgets()) {
+        w.dict.set(PDFName.of('DA'), PDFString.of(`/Helvetica ${size} Tf 0 g`));
+        w.dict.set(PDFName.of('Q'), PDFNumber.of(f.align === 'center' ? 1 : 0));
+      }
+    }
+    form.updateFieldAppearances(font);
+    // Register the field font in the form's resources; without this, Apple's PDF viewers
+    // re-lay out every field at their own default size and alignment.
+    form.acroForm.dict.set(PDFName.of('DR'), pdf.context.obj({ Font: { Helvetica: font.ref } }));
+    form.acroForm.dict.set(PDFName.of('DA'), PDFString.of('/Helvetica 10 Tf 0 g'));
+    return new Blob([await pdf.save()], { type: 'application/pdf' });
+  }
+
+  // One page of the CUSTOMER TALLY SHEET form, with the customer and up to 12 rows filled in.
+  function drawTallySheet(doc, l, c, rows, sheetNo, sheetCount, fields) {
+    const X0 = 28, X1 = 584, W = X1 - X0;
+    const thin = () => doc.setLineWidth(0.6), thick = () => doc.setLineWidth(2.2);
+    const label = (t, x, y, size = 7.5) => { doc.setFont('helvetica', 'bold'); doc.setFontSize(size); doc.text(t, x, y); };
+    // Every writable box becomes a form field (added by pdf-lib after drawing), so the PDF stays editable.
+    const page = doc.getNumberOfPages() - 1, pre = `p${page + 1}_`;
+    const field = (name, x, y, w, h, value = '', o = {}) => fields.push({ page, name: pre + name, x, y, w, h, value: value == null ? '' : String(value), ...o });
+    const hline = (y, x0 = X0, x1 = X1) => doc.line(x0, y, x1, y);
+    const vline = (x, y0, y1) => doc.line(x, y0, x, y1);
+    doc.setDrawColor(0, 0, 0); doc.setTextColor(0, 0, 0);
+
+    // Title
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(18);
+    doc.text('CUSTOMER TALLY SHEET', 306, 78, { align: 'center' });
+    if (sheetCount > 1) { doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.text(`Sheet ${sheetNo} of ${sheetCount}`, X1, 78, { align: 'right' }); }
+
+    // POC / UNIT / PHONE-EMAIL
+    let y = 88;
+    const UX = X0 + 350;
+    thin(); hline(y + 28); vline(UX, y, y + 28);
+    label('POC:', X0 + 4, y + 18); field('poc', X0 + 28, y + 4, UX - X0 - 30, 22, c.poc, { size: 11 });
+    label('UNIT:', UX + 4, y + 18); field('unit', UX + 30, y + 4, X1 - UX - 32, 22, c.unit, { size: 11 });
+    label('PHONE/EMAIL:', X0 + 30, y + 41);
+    field('phone_email', X0 + 88, y + 29, X1 - X0 - 90, 16, [c.phone, c.email].filter(Boolean).join('  /  '), { size: 10 });
+    y += 46;
+
+    // Item table
+    const widths = [45, 169, 141, 24, 32, 51, 39, 55];
+    const heads = ['ARR DATE', 'TCN', 'TRACKING #', 'PCS', 'WT', 'LOCATION', 'CARRIER', 'IN-CHECKER'];
+    const xs = [X0]; widths.forEach(w => xs.push(xs[xs.length - 1] + w));
+    const HH = 14, RH = 24.5, tableBottom = y + HH + SHEET_ROWS * RH;
+    thick(); hline(y);
+    thin();
+    xs.slice(1, -1).forEach(x => vline(x, y, tableBottom));
+    hline(y + HH);
+    for (let r = 1; r < SHEET_ROWS; r++) hline(y + HH + r * RH);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7);
+    heads.forEach((h, k) => doc.text(h, xs[k] + widths[k] / 2, y + 10, { align: 'center' }));
+
+    const keys = ['arr', 'tcn', 'trk', 'pcs', 'wt', 'loc', 'carrier', 'checker'];
+    for (let r = 0; r < SHEET_ROWS; r++) {
+      const it = rows[r];
+      const cells = it ? [it.arrDate, it.tcn || 'NO TCN', it.tracking || 'NO TRACKING', String(+it.pieces || 1), it.weight, it.location, it.carrier, it.inChecker || l.member] : [];
+      keys.forEach((k, ki) => field(`r${r + 1}_${k}`, xs[ki] + 1.5, y + HH + r * RH + 1.5, widths[ki] - 3, RH - 3, cells[ki] || '',
+        { size: ki === 1 || ki === 2 ? 9.5 : 9, align: ki === 1 || ki === 2 ? 'left' : 'center' }));
+    }
+    y = tableBottom;
+
+    // Notes
+    thick(); hline(y);
+    label('NOTES', X0 + 2, y + 8, 7);
+    thin(); hline(y + 10);
+    field('notes', X0 + 3, y + 12, W - 6, 62, '', { size: 10, multiline: true });
+    y += 10 + 66;
+    thick(); hline(y);
+    y += 4; hline(y);
+
+    // Person contacted
+    const pw = [96, 35, 47, 35, 343];
+    const px = [X0]; pw.forEach(w => px.push(px[px.length - 1] + w));
+    thin();
+    px.slice(1, -1).forEach(x => vline(x, y, y + 80));
+    [20, 40, 60].forEach(d => hline(y + d));
+    label('PERSON CONTACTED', X0 + 4, y + 13, 7);
+    label('PHONE: P', px[1] + 2, y + 8, 5.5); label('EMAIL: E', px[1] + 2, y + 15, 5.5);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7);
+    doc.text('DATE', px[2] + pw[2] / 2, y + 13, { align: 'center' });
+    doc.text('TIME', px[3] + pw[3] / 2, y + 13, { align: 'center' });
+    doc.text('REMARKS', px[4] + pw[4] / 2, y + 13, { align: 'center' });
+    ['contact', 'pe', 'date', 'time', 'remarks'].forEach((k, ki) => [1, 2, 3].forEach(r =>
+      field(`contact${r}_${k}`, px[ki] + 1.5, y + r * 20 + 1.5, pw[ki] - 3, 17, '', { size: 9, align: ki === 0 || ki === 4 ? 'left' : 'center' })));
+    y += 80;
+    thick(); hline(y);
+    y += 4;
+
+    // Received by
+    const RB = 79;
+    doc.setFillColor(128, 128, 128); doc.rect(X0 + RB, y, W - RB, 17, 'F');
+    thin(); vline(X0 + RB, y, y + 17);
+    label('RECEIVED BY', X0 + 4, y + 11.5, 7);
+    doc.setFillColor(0, 0, 0);
+    const ax = X0 + 64, ay = y + 4;
+    doc.rect(ax - 1, ay, 2, 5.5, 'F');
+    doc.triangle(ax - 3.5, ay + 5, ax + 3.5, ay + 5, ax, ay + 9.5, 'F');
+    y += 17;
+    thick(); hline(y);
+    thin();
+    vline(X0 + 288, y, y + 34);
+    label('PRINT NAME:', X0 + 4, y + 30, 7); label('SIGNATURE:', X0 + 292, y + 30, 7);
+    field('rcv_name', X0 + 56, y + 14, 288 - 60, 19, '', { size: 11 });
+    field('rcv_signature', X0 + 340, y + 14, W - 344, 19, '', { size: 11 });
+    hline(y + 34);
+    y += 34;
+    [178, 354, 476].forEach(d => vline(X0 + d, y, y + 21));
+    label('UNIT:', X0 + 4, y + 15, 7); label('PH#', X0 + 182, y + 15, 7);
+    label('DATE:', X0 + 358, y + 15, 7); label('TIME:', X0 + 480, y + 15, 7);
+    field('rcv_unit', X0 + 26, y + 2, 178 - 30, 18, '', { size: 10 });
+    field('rcv_phone', X0 + 200, y + 2, 354 - 204, 18, '', { size: 10 });
+    field('rcv_date', X0 + 382, y + 2, 476 - 386, 18, '', { size: 10 });
+    field('rcv_time', X0 + 504, y + 2, W - 506, 18, '', { size: 10 });
+    y += 21;
+
+    // Outer border
+    doc.setLineWidth(1.4); doc.rect(X0, 88, W, y - 88);
+
+    // Ground transportation checkbox
+    thin(); doc.rect(X0 + 2, y + 12, 13, 13);
+    field('ground', X0 + 3, y + 13, 11, 11, '', { check: true });
+    label('PICKED UP BY GROUND TRANSPORTATION?', X0 + 24, y + 22, 7.5);
+  }
+
   async function deliver(blob, name) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -850,7 +1161,10 @@ button { cursor: pointer; }
   const closeExport = () => { $('#export-wrap').hidden = true; };
   $('#btn-export').addEventListener('click', () => {
     const t = totals(current);
-    $('#export-sum').textContent = `${KINDS[current.kind]} · ${isWeekly(current) ? '' : current.scac + ' · '}${current.member} · ${t.items} items, ${t.pieces} pieces` + (isWeekly(current) ? '' : `, ${fmtWt(t.weight)} lb`);
+    $('#export-sum').textContent = `${KINDS[current.kind]} · ${hasScac(current) ? current.scac + ' · ' : ''}${current.member} · ${t.items} items, ${t.pieces} pieces` + (isWeekly(current) ? '' : `, ${fmtWt(t.weight)} lb`);
+    const pu = isPickup(current);
+    $('#pdf-opt-title').textContent = pu ? 'PDF Binder' : 'PDF';
+    $('#pdf-opt-sub').textContent = pu ? 'Every customer\'s tally sheet, filled in and ready to print' : 'Printable report with header and totals';
     $('#export-wrap').hidden = false;
   });
   $('#export-cancel').addEventListener('click', closeExport);
@@ -860,11 +1174,13 @@ button { cursor: pointer; }
     const fmt = b.dataset.fmt, l = current;
     b.setAttribute('aria-busy', 'true');
     try {
-      const blob = fmt === 'pdf' ? await toPdf(l)
+      const binder = fmt === 'pdf' && isPickup(l);
+      const blob = binder ? await toBinder(l)
+        : fmt === 'pdf' ? await toPdf(l)
         : fmt === 'xlsx' ? await toXlsx(l)
         : new Blob([toCsv(l)], { type: 'text/csv' });
       closeExport();
-      await deliver(blob, `${fileName(l)}.${fmt}`);
+      await deliver(blob, `${fileName(l)}${binder ? '-BINDER' : ''}.${fmt}`);
     } catch (err) {
       toast('Export failed. Check your connection and try again.');
     } finally {
@@ -880,9 +1196,12 @@ button { cursor: pointer; }
     $('#e-tcn').value = it.tcn; $('#e-trk').value = it.tracking; $('#e-pkg').value = it.pkgType;
     $('#e-pcs').value = it.pieces; $('#e-wt').value = it.weight ?? '';
     $('#e-nsn').value = it.nsn || ''; $('#e-ciic').value = it.ciic || ''; $('#e-loc').value = it.location || '';
-    const tally = isWeekly(current);
-    document.querySelectorAll('#edit-form [data-tally]').forEach(el => el.hidden = !tally);
-    document.querySelectorAll('#edit-form [data-weekly]').forEach(el => el.hidden = tally);
+    $('#e-poc').value = it.poc || ''; $('#e-unit').value = it.unit || '';
+    $('#e-phone').value = it.phone || ''; $('#e-email').value = it.email || '';
+    $('#e-carrier').value = it.carrier || ''; $('#e-arr').value = it.arrDate || '';
+    document.querySelectorAll('#edit-form [data-kinds]').forEach(el => {
+      el.hidden = !el.dataset.kinds.split(' ').includes(current.kind);
+    });
     $('#edit-wrap').hidden = false;
   }
   const closeEdit = () => { $('#edit-wrap').hidden = true; editIdx = -1; };
@@ -893,13 +1212,23 @@ button { cursor: pointer; }
     const it = current.items[editIdx];
     it.tcn = cleanTcn($('#e-tcn').value);
     it.tracking = cleanTracking($('#e-trk').value);
-    it.pkgType = $('#e-pkg').value.trim() || 'Box';
     it.pieces = Math.max(1, parseInt($('#e-pcs').value, 10) || 1);
-    if (isWeekly(current)) {
+    if (isPickup(current)) {
+      it.poc = $('#e-poc').value.trim();
+      it.unit = $('#e-unit').value.trim().toUpperCase();
+      it.phone = $('#e-phone').value.trim();
+      it.email = $('#e-email').value.trim();
+      it.weight = $('#e-wt').value.trim();
+      it.location = $('#e-loc').value.trim().toUpperCase();
+      it.carrier = $('#e-carrier').value.trim().toUpperCase();
+      it.arrDate = $('#e-arr').value.trim().toUpperCase();
+    } else if (isWeekly(current)) {
+      it.pkgType = $('#e-pkg').value.trim() || 'Box';
       it.nsn = cleanNsn($('#e-nsn').value);
       it.ciic = $('#e-ciic').value.trim().toUpperCase();
       it.location = $('#e-loc').value.trim().toUpperCase();
     } else {
+      it.pkgType = $('#e-pkg').value.trim() || 'Box';
       it.weight = $('#e-wt').value.trim();
     }
     save(); closeEdit(); renderList(); toast('Item updated');
@@ -919,13 +1248,14 @@ button { cursor: pointer; }
   };
   let step = 'tcn', stepAt = 0, draft = null;
   const flow = () => isWeekly(current) ? ['tcn', 'trk', 'nsn', 'det'] : ['tcn', 'trk', 'det'];
+  const todayArr = () => { const d = new Date(); return `${pad(d.getDate())}${MON[d.getMonth()].toUpperCase()}`; };
   const newDraft = () => ({ tcn: '', trk: '', nsn: '', back: false, pkg: store.lastPkg || 'Box', pieces: 1, weight: '',
-    ciic: '', location: store.lastLocation || '' });
+    ciic: '', location: store.lastLocation || '', carrier: store.lastCarrier || '', arrDate: todayArr() });
 
   function startScan() {
     draft = newDraft();
     show('s-scan');
-    setStep('tcn');
+    setStep(isPickup(current) && !current.curCust ? 'cust' : 'tcn');
     requestWake();
   }
   $('#scan-done').addEventListener('click', () => { renderList(); show('s-list'); });
@@ -940,13 +1270,25 @@ button { cursor: pointer; }
 
   function setStep(s) {
     step = s; stepAt = Date.now();
+    const pu = isPickup(current);
+    $('#p-cust').hidden = s !== 'cust';
+    $('#steps').hidden = s === 'cust';
+    $('#cust-bar').hidden = !pu || s === 'cust';
+    if (pu && current.curCust) $('#cust-bar-val').textContent = [current.curCust.poc, current.curCust.unit].filter(Boolean).join(' · ');
+    if (s === 'cust') {
+      $('#p-scan').hidden = true; $('#p-det').hidden = true; $('#cam').hidden = true;
+      $('#scan-title').textContent = 'PICKUP · Customer';
+      pauseCamera();
+      renderCustPanel();
+      return;
+    }
     const order = flow(), cur = order.indexOf(s);
     const steps = $('#steps');
     steps.style.setProperty('--n', order.length);
     steps.innerHTML = order.map((k, i) =>
       `<span class="${i === cur ? 'on' : i < cur ? 'done' : ''}">${i + 1} · ${k === 'det' ? 'Details' : SCAN[k].label}</span>`).join('');
     $('#scan-title').textContent = `${tagOf(current)} · Item ${current.items.length + 1}`;
-    const scanning = s !== 'det';
+    const scanning = !!SCAN[s];
     $('#p-scan').hidden = !scanning;
     $('#p-det').hidden = scanning;
     $('#cam').hidden = !scanning;
@@ -976,7 +1318,7 @@ button { cursor: pointer; }
   }
 
   function accept(value, fromCamera) {
-    if (step === 'det') return;
+    if (!SCAN[step]) return;
     draft[step] = value ? SCAN[step].clean(value) : '';
     if (fromCamera) beep();
     const order = flow();
@@ -988,7 +1330,7 @@ button { cursor: pointer; }
   let lastCode = '', lastAt = 0;
   function onDecode(text) {
     const now = Date.now();
-    if (step === 'det' || now - stepAt < 700) return;
+    if (!SCAN[step] || now - stepAt < 700) return;
     if (text === lastCode && now - lastAt < 2500) return;
     lastCode = text; lastAt = now;
     // Reject a code already captured for a different field on this item.
@@ -1015,7 +1357,7 @@ button { cursor: pointer; }
 
   // details
   function renderDetails() {
-    const tally = isWeekly(current);
+    const tally = isWeekly(current), kind = current.kind;
     $('#cap-list').innerHTML = capturedHtml(flow().filter(k => k !== 'det'), 'Rescan');
     // duplicate + format checks
     const notes = [];
@@ -1027,11 +1369,16 @@ button { cursor: pointer; }
     const nsnLen = draft.nsn.replace(/-/g, '').length;
     if (tally && draft.nsn && nsnLen !== 13) notes.push(`NSN is ${nsnLen} characters; NSNs are 13. Check the scan.`);
     $('#dup-warn').hidden = !notes.length; $('#dup-warn').textContent = notes.join(' ');
-    $('#weight-field').hidden = tally;
-    $('#ciic-field').hidden = !tally;
-    $('#loc-field').hidden = !tally;
+    $('#pkg-field').hidden = kind === 'pickup';
+    $('#weight-field').hidden = kind === 'weekly';
+    $('#ciic-field').hidden = kind !== 'weekly';
+    $('#loc-field').hidden = kind === 'tally';
+    $('#carrier-field').hidden = kind !== 'pickup';
+    $('#arr-field').hidden = kind !== 'pickup';
+    $('#arr-date').value = draft.arrDate;
     renderPkgChips();
     renderCiicChips();
+    renderCarrierChips();
     $('#pieces').value = draft.pieces;
     $('#weight').value = draft.weight;
     $('#location').value = draft.location;
@@ -1072,6 +1419,57 @@ button { cursor: pointer; }
   $('#ciic-other').addEventListener('input', e => { draft.ciic = e.target.value.trim().toUpperCase() || 'OTHER'; });
   $('#location').addEventListener('input', e => { draft.location = e.target.value; });
 
+  // Carrier (pickup): common SCACs, or Other to type one. Remembers the last carrier.
+  function renderCarrierChips() {
+    const isOther = draft.carrier === 'OTHER' || (draft.carrier && !COMMON_SCACS.includes(draft.carrier));
+    $('#carrier-chips').innerHTML = [...COMMON_SCACS, 'Other'].map(c => {
+      const on = c === 'Other' ? isOther : draft.carrier === c;
+      return `<button type="button" class="chip scac" data-v="${c}" aria-pressed="${on}">${c}</button>`;
+    }).join('');
+    $('#carrier-other').hidden = !isOther;
+    if (isOther) $('#carrier-other').value = draft.carrier === 'OTHER' ? '' : draft.carrier;
+  }
+  $('#carrier-chips').addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    const v = b.dataset.v;
+    draft.carrier = v === 'Other' ? 'OTHER' : draft.carrier === v ? '' : v;
+    renderCarrierChips();
+    if (v === 'Other') $('#carrier-other').focus();
+  });
+  $('#carrier-other').addEventListener('input', e => { draft.carrier = e.target.value.trim().toUpperCase() || 'OTHER'; });
+  $('#arr-date').addEventListener('input', e => { draft.arrDate = e.target.value.trim().toUpperCase(); });
+
+  // Customer step (pickup): pick a customer already on this list, or enter a new POC + unit.
+  function renderCustPanel() {
+    const cs = customersOf(current);
+    $('#cust-existing').hidden = !cs.length;
+    $('#cust-pick').innerHTML = cs.map((c, i) =>
+      `<button class="btn" type="button" data-c="${i}"><span>${esc(c.poc || 'No POC')} · ${esc(c.unit || 'No unit')}</span><small>${c.items.length} item${c.items.length === 1 ? '' : 's'}</small></button>`).join('');
+    $('#c-poc').value = ''; $('#c-unit').value = ''; $('#c-phone').value = ''; $('#c-email').value = '';
+    $('#c-err').hidden = true;
+  }
+  const useCustomer = (poc, unit, phone, email) => {
+    current.curCust = { poc, unit, phone: phone || '', email: email || '' }; save();
+    draft = newDraft();
+    setStep('tcn');
+  };
+  $('#cust-pick').addEventListener('click', e => {
+    const b = e.target.closest('[data-c]'); if (!b) return;
+    const c = customersOf(current)[+b.dataset.c];
+    useCustomer(c.poc, c.unit, c.phone, c.email);
+  });
+  $('#p-cust').addEventListener('submit', e => {
+    e.preventDefault();
+    const poc = $('#c-poc').value.trim(), unit = $('#c-unit').value.trim().toUpperCase();
+    const phone = $('#c-phone').value.trim(), email = $('#c-email').value.trim();
+    if (!poc) { $('#c-err').textContent = 'Enter the POC name.'; $('#c-err').hidden = false; return; }
+    document.activeElement?.blur();
+    // Same POC + unit as an existing customer joins that customer's sheet.
+    const match = customersOf(current).find(c => c.key === custKey({ poc, unit }));
+    useCustomer(match ? match.poc : poc, match ? match.unit : unit, phone || match?.phone, email || match?.email);
+  });
+  $('#cust-change').addEventListener('click', () => setStep('cust'));
+
   const setPieces = n => { draft.pieces = Math.max(1, n || 1); $('#pieces').value = draft.pieces; };
   $('#pc-minus').addEventListener('click', () => setPieces(draft.pieces - 1));
   $('#pc-plus').addEventListener('click', () => setPieces(draft.pieces + 1));
@@ -1084,7 +1482,20 @@ button { cursor: pointer; }
     setPieces(parseInt($('#pieces').value, 10));
     const pkgType = draft.pkg === 'Other' ? 'Other' : draft.pkg;
     const item = { id: uid(), tcn: draft.tcn, tracking: draft.trk, pkgType, pieces: draft.pieces, scannedAt: new Date().toISOString() };
-    if (isWeekly(current)) {
+    if (isPickup(current)) {
+      delete item.pkgType;
+      Object.assign(item, {
+        poc: current.curCust.poc, unit: current.curCust.unit,
+        phone: current.curCust.phone || '', email: current.curCust.email || '',
+        arrDate: ($('#arr-date').value.trim().toUpperCase() || todayArr()),
+        weight: $('#weight').value.replace(/[^0-9.]/g, ''),
+        location: $('#location').value.trim().toUpperCase(),
+        carrier: draft.carrier === 'OTHER' ? '' : draft.carrier,
+        inChecker: current.member
+      });
+      store.lastLocation = item.location;
+      store.lastCarrier = item.carrier;
+    } else if (isWeekly(current)) {
       item.nsn = draft.nsn;
       item.ciic = draft.ciic === 'OTHER' ? '' : draft.ciic;
       item.location = $('#location').value.trim().toUpperCase();
@@ -1094,7 +1505,7 @@ button { cursor: pointer; }
     }
     current.items.push(item);
     store.lastPkg = pkgType; save();
-    toast(`Item ${current.items.length} saved`);
+    toast(isPickup(current) ? `Item saved to ${current.curCust.poc}'s sheet` : `Item ${current.items.length} saved`);
     draft = newDraft();
     setStep('tcn');
   });
@@ -1163,7 +1574,7 @@ button { cursor: pointer; }
         ctx.drawImage(video, r.x, r.y, r.w, r.h, 0, 0, canvas.width, canvas.height);
         try {
           const res = await ZX.readBarcodes(ctx.getImageData(0, 0, canvas.width, canvas.height), READER);
-          if (camState === 'running' && step !== 'det') {
+          if (camState === 'running' && SCAN[step]) {
             const best = pickBest(res, canvas.width, canvas.height);
             if (!best) pending = '';
             else if (NO_CHECKSUM.test(best.format) && pending !== best.text) pending = best.text;
@@ -1196,14 +1607,14 @@ button { cursor: pointer; }
       // iOS can end the stream when the photo camera opens; restart when we come back.
       track.addEventListener('ended', () => {
         stopCamera();
-        if (!$('#s-scan').hidden && step !== 'det') startCamera();
+        if (!$('#s-scan').hidden && SCAN[step]) startCamera();
       });
       video.srcObject = stream;
       await video.play();
       if ($('#s-scan').hidden) { stopCamera(); return; }
       camState = 'running'; camMsg('');
       setupTools();
-      if (step === 'det') pauseCamera(); else scanLoop();
+      if (!SCAN[step]) pauseCamera(); else scanLoop();
     } catch (err) {
       stopCamera();
       camMsg(!window.isSecureContext
@@ -1266,7 +1677,7 @@ button { cursor: pointer; }
         };
       }
     } catch { toast('Could not read that photo. Try again or use "Type it".'); }
-    if (!$('#s-scan').hidden && step !== 'det' && (!track || track.readyState !== 'live')) { stopCamera(); startCamera(); }
+    if (!$('#s-scan').hidden && SCAN[step] && (!track || track.readyState !== 'live')) { stopCamera(); startCamera(); }
   });
 
   // keep the screen on while scanning
@@ -1274,7 +1685,7 @@ button { cursor: pointer; }
   async function requestWake() { try { wake = await navigator.wakeLock?.request('screen'); } catch {} }
   function releaseWake() { try { wake?.release(); } catch {} wake = null; }
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && !$('#s-scan').hidden) { requestWake(); if (step !== 'det') startCamera(); }
+    if (document.visibilityState === 'visible' && !$('#s-scan').hidden) { requestWake(); if (SCAN[step]) startCamera(); }
   });
 
   // ---------- boot ----------
