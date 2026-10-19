@@ -1,5 +1,5 @@
 // Network-first for the app's own files, falling back to cache so the app works offline.
-const CACHE = 'inventory-v8';
+const CACHE = 'inventory-v9';
 const ASSETS = [
   './',
   './index.html',

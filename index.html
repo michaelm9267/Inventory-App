@@ -150,7 +150,7 @@ button { cursor: pointer; }
 .meta dd { margin: 0; font-weight: 600; min-width: 0; }
 .items { display: flex; flex-direction: column; border-radius: var(--r); overflow: hidden; border: 1px solid var(--line); background: var(--surface); }
 .item {
-  display: grid; grid-template-columns: 2.2em 1fr; gap: 2px 8px; text-align: left; width: 100%;
+  display: grid; grid-template-columns: 2.2em 1fr auto; gap: 2px 8px; text-align: left; width: 100%;
   padding: 12px; border: 0; border-bottom: 1px solid var(--line); background: transparent;
 }
 .item:last-child { border-bottom: 0; }
@@ -158,6 +158,13 @@ button { cursor: pointer; }
 .item .line { font-family: var(--font-code); font-size: .85rem; word-break: break-all; }
 .item .line i { font-style: normal; color: var(--muted); font-family: var(--font-body); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; margin-right: 6px; }
 .item .none { color: var(--warn); }
+.item > :not(.n):not(.edit) { grid-column: 2; }
+.item .edit {
+  grid-column: 3; grid-row: 1 / span 4; align-self: center;
+  font: 700 .78rem/1 var(--font-body); text-transform: uppercase; letter-spacing: .06em;
+  color: var(--ink); background: var(--chip); border: 1px solid var(--line); border-radius: 999px; padding: 7px 10px;
+}
+.item:active { background: var(--chip); }
 .item .det { font-size: .88rem; color: var(--muted); }
 .stack { display: flex; flex-direction: column; gap: 10px; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -214,7 +221,7 @@ button { cursor: pointer; }
 .stepper button { min-height: 50px; border-radius: var(--r); border: 1px solid var(--line); background: var(--chip); font: 700 1.5rem/1 var(--font-display); }
 .stepper input { text-align: center; font: 700 1.4rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.recent { font-size: .85rem; color: var(--muted); }
+.recent { gap: 8px; }
 
 /* Toast + sheet */
 .toast {
@@ -385,7 +392,7 @@ button { cursor: pointer; }
         <input class="input code" id="type-input" autocomplete="off" autocapitalize="characters" spellcheck="false">
         <button class="btn primary" type="submit" style="flex:0 0 auto">Use</button>
       </form>
-      <p class="recent" id="recent"></p>
+      <div class="field recent" id="recent"></div>
     </div>
 
     <!-- step: details -->
@@ -686,8 +693,9 @@ button { cursor: pointer; }
           ? (it.ciic ? ' · CIIC ' + esc(it.ciic) : '') + (it.location ? ' · ' + esc(it.location) : '')
           : (it.weight ? ' · ' + esc(it.weight) + ' lb' : '')}`;
     return `
-      <button class="item" data-i="${i}">
+      <button class="item" data-i="${i}" aria-label="Edit item ${i + 1}">
         <span class="n">${i + 1}</span>
+        <span class="edit" aria-hidden="true">Edit</span>
         <span class="line"><i>TCN</i>${it.tcn ? esc(it.tcn) : '<span class="none">No TCN</span>'}</span>
         <span class="line"><i>Trk</i>${it.tracking ? esc(it.tracking) : '<span class="none">No tracking #</span>'}</span>
         ${isWeekly(l) ? `<span class="line"><i>NSN</i>${it.nsn ? esc(it.nsn) : '<span class="none">No NSN</span>'}</span>` : ''}
@@ -1202,9 +1210,21 @@ button { cursor: pointer; }
     document.querySelectorAll('#edit-form [data-kinds]').forEach(el => {
       el.hidden = !el.dataset.kinds.split(' ').includes(current.kind);
     });
+    if (!$('#s-scan').hidden) pauseCamera();
     $('#edit-wrap').hidden = false;
   }
-  const closeEdit = () => { $('#edit-wrap').hidden = true; editIdx = -1; };
+  const closeEdit = () => {
+    $('#edit-wrap').hidden = true; editIdx = -1;
+    if (!$('#s-scan').hidden && SCAN[step]) startCamera();
+  };
+  // After an edit or delete, redraw the list and, if scanning, the recent items and item count.
+  const afterEdit = msg => {
+    save(); closeEdit(); renderList(); toast(msg);
+    if (!$('#s-scan').hidden && SCAN[step]) {
+      renderRecent();
+      $('#scan-title').textContent = `${tagOf(current)} · Item ${current.items.length + 1}`;
+    }
+  };
   $('#e-cancel').addEventListener('click', closeEdit);
   $('#edit-wrap').addEventListener('click', e => { if (e.target.id === 'edit-wrap') closeEdit(); });
   $('#edit-form').addEventListener('submit', e => {
@@ -1231,10 +1251,10 @@ button { cursor: pointer; }
       it.pkgType = $('#e-pkg').value.trim() || 'Box';
       it.weight = $('#e-wt').value.trim();
     }
-    save(); closeEdit(); renderList(); toast('Item updated');
+    afterEdit('Item updated');
   });
   $('#e-del').addEventListener('click', e => confirmTap(e.currentTarget, 'Tap again to delete', () => {
-    current.items.splice(editIdx, 1); save(); closeEdit(); renderList(); toast('Item deleted');
+    current.items.splice(editIdx, 1); afterEdit('Item deleted');
   }));
 
   // ---------- scanning flow ----------
@@ -1311,11 +1331,15 @@ button { cursor: pointer; }
   }
 
   function renderRecent() {
-    const last = current.items.slice(-2).reverse();
-    $('#recent').innerHTML = last.length
-      ? 'Last saved: ' + last.map((it, k) => `#${current.items.length - k} ${esc(it.tcn || it.tracking || it.nsn || 'no codes')}`).join(' · ')
+    const n = current.items.length, idx = [];
+    for (let i = n - 1; i >= Math.max(0, n - 3); i--) idx.push(i);
+    $('#recent').innerHTML = idx.length
+      ? `<span class="label">Recently saved · tap to edit</span><div class="items">${idx.map(i => itemHtml(current, current.items[i], i)).join('')}</div>`
       : '';
   }
+  $('#recent').addEventListener('click', e => {
+    const b = e.target.closest('.item'); if (b) openEdit(+b.dataset.i);
+  });
 
   function accept(value, fromCamera) {
     if (!SCAN[step]) return;
