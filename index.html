@@ -81,7 +81,10 @@ button { cursor: pointer; }
 .body {
   flex: 1; overflow-y: auto; padding: 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   display: flex; flex-direction: column; gap: 16px;
+  -webkit-overflow-scrolling: touch;
 }
+/* Sections keep their full height; without this a long item list gets squeezed and clipped instead of scrolling. */
+.body > *, .body > .field > * { flex-shrink: 0; }
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -390,6 +393,13 @@ button { cursor: pointer; }
       <button class="btn find-btn" id="btn-find" type="button"><b>Find a package</b><span>Scan or type a TCN or tracking #</span></button>
       <button class="btn find-btn" id="btn-import" type="button"><b>Import document</b><span>Read a PDF, photo or spreadsheet and make barcodes</span></button>
     </div>
+    <form class="field" id="paste-form" novalidate style="gap:8px">
+      <button class="linkbtn" type="button" id="paste-open" style="align-self:flex-start">Got a shared list link? Paste it here</button>
+      <div class="row" id="paste-row" hidden>
+        <input class="input" id="paste-input" type="url" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="go" placeholder="Paste the list link" aria-label="Shared list link">
+        <button class="btn primary" type="submit" style="flex:0 0 auto">Open</button>
+      </div>
+    </form>
     <div class="label">Start a new list</div>
     <div class="kinds" id="kinds">
       <button class="kind" data-kind="tally"><b>Tally Sheet</b><span>SCAC · TCN · Tracking · Package · Pieces · Weight</span></button>
@@ -435,6 +445,7 @@ button { cursor: pointer; }
     <button class="btn primary block" id="btn-scan">Scan Items</button>
     <div class="row">
       <button class="btn" id="btn-export">Export</button>
+      <button class="btn" id="btn-share-link" type="button">Share as link</button>
       <button class="btn" id="btn-done" type="button">Mark Done</button>
       <button class="btn" id="btn-cmos" type="button" hidden>Key into CMOS <span class="beta-tag">Beta</span></button>
       <button class="btn danger" id="btn-del-list">Delete List</button>
@@ -845,6 +856,29 @@ button { cursor: pointer; }
   </div>
 </div>
 
+<!-- SHARE AS LINK (computers, or when the share menu isn't available) -->
+<div class="sheet-wrap" id="link-wrap" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="link-title">
+    <h3 id="link-title">Share as link</h3>
+    <p class="hint" id="link-sum"></p>
+    <input class="input" id="link-url" readonly aria-label="List link">
+    <div class="row">
+      <button class="btn primary" type="button" id="link-copy">Copy link</button>
+      <button class="btn" type="button" id="link-close">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHARED LIST (opened from a link) -->
+<div class="sheet-wrap" id="shared-wrap" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="shared-title">
+    <h3 id="shared-title">Shared list</h3>
+    <p class="hint" id="shared-sum"></p>
+    <button class="btn primary" type="button" id="shared-add">Add to my lists</button>
+    <button class="btn" type="button" id="shared-cancel">Not now</button>
+  </div>
+</div>
+
 <!-- FILE READY: Share or Download (non-PDF files on phones) -->
 <div class="sheet-wrap" id="file-wrap" hidden>
   <div class="sheet" role="dialog" aria-labelledby="file-title">
@@ -1004,7 +1038,7 @@ button { cursor: pointer; }
   let backArmed = false, skipPop = false;
   const armBack = () => { if (!backArmed) { history.pushState({ app: 'inventory-scan' }, ''); backArmed = true; } };
   const OVERLAYS = [
-    ['#qs-wrap', () => closeQuickScan()], ['#pdf-wrap', () => closePreview()], ['#file-wrap', () => closeFile()],
+    ['#qs-wrap', () => closeQuickScan()], ['#pdf-wrap', () => closePreview()], ['#file-wrap', () => closeFile()], ['#shared-wrap', () => closeShared()], ['#link-wrap', () => { $('#link-wrap').hidden = true; }],
     ['#imp-target-wrap', () => { $('#imp-target-wrap').hidden = true; }], ['#export-wrap', () => closeExport()], ['#edit-wrap', () => closeEdit()]
   ];
   const SCREEN_BACK = { 's-new': '#new-back', 's-list': '#list-back', 's-scan': '#scan-done', 's-settings': '#settings-back', 's-import': '#imp-back', 's-cmos': '#cmos-back' };
@@ -3207,6 +3241,107 @@ button { cursor: pointer; }
     if (!v) { $('#welcome-err').textContent = 'Enter your name to continue.'; $('#welcome-err').hidden = false; return; }
     store.userName = v; save();
     renderHome(); show('s-home');
+    showShared();
+  });
+
+  // ---------- share a list as a link ----------
+  // The list travels inside the link itself, after '#', which browsers never send to a server.
+  // It's compressed so an 18-item list makes a link of roughly 1 KB.
+  const b64url = bytes => { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+  const unb64url = str => { const s = atob(str.replace(/-/g, '+').replace(/_/g, '/')); const b = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return b; };
+  const pipe = async (bytes, stream) => new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer());
+  async function packList(l) {
+    const { cmos, curCust, ...list } = l; // device-only working state stays behind
+    const json = new TextEncoder().encode(JSON.stringify({ v: 1, by: store.userName || '', at: new Date().toISOString(), list }));
+    if (window.CompressionStream) { try { return 'z' + b64url(await pipe(json, new CompressionStream('deflate-raw'))); } catch {} }
+    return 'j' + b64url(json);
+  }
+  async function unpackList(code) {
+    let bytes = unb64url(code.slice(1));
+    if (code[0] === 'z') bytes = await pipe(bytes, new DecompressionStream('deflate-raw'));
+    const data = JSON.parse(new TextDecoder().decode(bytes));
+    const l = data && data.list;
+    if (!l || !l.id || !Array.isArray(l.items) || !KINDS[l.kind]) throw new Error('bad list');
+    return data;
+  }
+  $('#btn-share-link').addEventListener('click', async e => {
+    const btn = e.currentTarget, l = current;
+    if (btn.getAttribute('aria-busy') === 'true') return;
+    btn.setAttribute('aria-busy', 'true');
+    try {
+      const url = `${location.origin}${location.pathname}#share=${await packList(l)}`;
+      const title = `${listTitle(l)} · ${KINDS[l.kind]}`;
+      const text = `${title} (${l.items.length} item${l.items.length === 1 ? '' : 's'}). Open the link to add it to Inventory Scan:`;
+      if (navigator.share && isTouchDevice()) {
+        try { await navigator.share({ title, text, url }); toast('Link shared'); return; }
+        catch (err) { if (err.name === 'AbortError') return; } // otherwise fall through to the copy panel
+      }
+      $('#link-sum').textContent = `${title} · ${l.items.length} item${l.items.length === 1 ? '' : 's'}. Copy the link and paste it into an email, Teams or a text. ` +
+        'Whoever opens it can add the list to their Inventory Scan.' + (url.length > 8000 ? ' This link is long, so Teams or a text works better than email.' : '');
+      $('#link-url').value = url;
+      $('#link-wrap').hidden = false;
+      $('#link-url').select();
+    } catch {
+      toast("Couldn't share the link. Try again, or use Export.");
+    } finally { btn.removeAttribute('aria-busy'); }
+  });
+
+  $('#link-close').addEventListener('click', () => { $('#link-wrap').hidden = true; });
+  $('#link-wrap').addEventListener('click', e => { if (e.target.id === 'link-wrap') $('#link-wrap').hidden = true; });
+  $('#link-copy').addEventListener('click', async () => {
+    const box = $('#link-url');
+    let ok = false;
+    try { await navigator.clipboard.writeText(box.value); ok = true; } catch {}
+    if (!ok) { box.focus(); box.select(); try { ok = document.execCommand('copy'); } catch {} } // older browsers / locked-down PCs
+    if (ok) { $('#link-wrap').hidden = true; toast('Link copied. Paste it into an email, Teams or a text.'); }
+    else { box.focus(); box.select(); toast('Press Ctrl+C (or ⌘C) to copy the selected link.'); }
+  });
+
+  // Opening a shared link: offer to add the list (or update an older copy of the same list).
+  let sharedIn = null;
+  async function checkSharedLink() {
+    const m = location.hash.match(/^#share=([zj][A-Za-z0-9_-]+)$/);
+    if (!m) return;
+    history.replaceState(history.state, '', location.pathname + location.search); // tidy the address bar
+    try { sharedIn = await unpackList(m[1]); }
+    catch { toast("That link didn't open. Ask for it to be sent again."); return; }
+    if (!store.userName) return; // the welcome screen comes first; it calls showShared() afterwards
+    showShared();
+  }
+  function showShared() {
+    if (!sharedIn) return;
+    const l = sharedIn.list, mine = store.lists.find(x => x.id === l.id);
+    const pcs = l.items.reduce((a, it) => a + (+it.pieces || 0), 0);
+    $('#shared-sum').textContent = `${sharedIn.by ? sharedIn.by + ' shared ' : ''}${listTitle(l)} · ${KINDS[l.kind]} · ${l.items.length} item${l.items.length === 1 ? '' : 's'}, ${pcsLabel(pcs)}.` +
+      (mine ? ` You already have this list (${mine.items.length} items on this device).` : '');
+    $('#shared-add').textContent = mine ? 'Update my copy' : 'Add to my lists';
+    $('#shared-wrap').hidden = false;
+  }
+  function closeShared() { sharedIn = null; $('#shared-wrap').hidden = true; }
+  $('#shared-cancel').addEventListener('click', closeShared);
+  $('#shared-wrap').addEventListener('click', e => { if (e.target.id === 'shared-wrap') closeShared(); });
+  $('#shared-add').addEventListener('click', () => {
+    const l = sharedIn.list, k = store.lists.findIndex(x => x.id === l.id);
+    const before = k >= 0 ? store.lists[k] : null;
+    if (k >= 0) store.lists[k] = { ...l, cmos: before.cmos }; else store.lists.push(l);
+    save(); closeShared();
+    openList(store.lists.find(x => x.id === l.id));
+    toast(before ? 'Your copy is updated' : 'List added', () => {
+      if (before) store.lists[store.lists.findIndex(x => x.id === l.id)] = before;
+      else store.lists = store.lists.filter(x => x.id !== l.id);
+      save(); renderHome(); show('s-home');
+    });
+  });
+  window.addEventListener('hashchange', checkSharedLink); // a link opened while the app is already open
+  // Pasting a link: needed on iPhone, where the Home Screen app keeps lists separate from Safari.
+  $('#paste-open').addEventListener('click', () => { $('#paste-row').hidden = false; $('#paste-input').focus(); });
+  $('#paste-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const m = $('#paste-input').value.trim().match(/#share=([zj][A-Za-z0-9_-]+)/);
+    if (!m) { toast("That isn't an Inventory Scan list link. Copy the whole link and try again."); return; }
+    try { sharedIn = await unpackList(m[1]); } catch { toast("That link didn't open. Ask for it to be sent again."); return; }
+    $('#paste-input').value = ''; $('#paste-row').hidden = true; $('#paste-input').blur();
+    showShared();
   });
 
   // ---------- boot ----------
@@ -3217,6 +3352,7 @@ button { cursor: pointer; }
   }
   renderHome();
   if (!store.userName) showWelcome();
+  checkSharedLink();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
