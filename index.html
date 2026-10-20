@@ -106,6 +106,7 @@ button { cursor: pointer; }
   border: 1px solid var(--line); background: var(--surface); font-size: 1.05rem;
 }
 .input.code { font-family: var(--font-code); text-transform: uppercase; }
+.input.code::placeholder { text-transform: none; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
   min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line);
@@ -229,6 +230,11 @@ button { cursor: pointer; }
   padding: 14px 16px; border-radius: var(--r); background: var(--ink); color: var(--bg); font-weight: 600;
   box-shadow: 0 6px 24px rgba(0,0,0,.25); transition: opacity .2s, transform .2s;
 }
+.toast { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#toast-undo {
+  flex: none; background: transparent; border: 0; color: var(--accent); padding: 4px 2px;
+  font: 700 .95rem/1 var(--font-body); text-transform: uppercase; letter-spacing: .06em;
+}
 .toast.hide { opacity: 0; transform: translateY(10px); pointer-events: none; }
 .sheet-wrap { position: fixed; inset: 0; z-index: 40; background: rgba(10,15,20,.5); display: flex; align-items: flex-end; }
 .sheet {
@@ -261,9 +267,105 @@ button { cursor: pointer; }
 .cust-head > div { min-width: 0; display: flex; flex-direction: column; }
 .cust-head b { font: 700 1.15rem/1.15 var(--font-display); text-transform: uppercase; overflow-wrap: anywhere; }
 .cust-head span { font-size: .82rem; color: var(--muted); }
+.cust-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; flex: none; max-width: 58%; }
 .cust-pick { display: flex; flex-direction: column; gap: 8px; }
 .cust-pick .btn { justify-content: space-between; text-align: left; gap: 12px; }
 .cust-pick .btn small { color: var(--muted); font-weight: 500; }
+.linkbtn { background: none; border: 0; padding: 10px 4px; min-height: 40px; font-weight: 700; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.tools { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.find-btn { flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; text-align: left; min-height: 72px; padding-block: 10px; }
+.find-btn b { font: 700 1.25rem/1 var(--font-display); text-transform: uppercase; letter-spacing: .03em; }
+.find-btn span { font-size: .82rem; color: var(--muted); font-weight: 500; }
+.done-tag { font: 700 .66rem/1 var(--font-body); text-transform: uppercase; letter-spacing: .08em; color: var(--ok); border: 1px solid var(--ok); border-radius: 999px; padding: 3px 6px; }
+.nudge { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.nudge p { margin: 0; flex: 1 1 200px; }
+.hit {
+  display: flex; flex-direction: column; gap: 3px; width: 100%; text-align: left; padding: 12px;
+  border: 0; border-bottom: 1px solid var(--line); background: transparent;
+}
+.hit:last-child { border-bottom: 0; }
+.hit b { font: 700 1.1rem/1.15 var(--font-display); text-transform: uppercase; }
+.hit .code { font-size: .85rem; }
+.hit small { color: var(--muted); font-size: .85rem; }
+.picked { color: var(--ok); font-weight: 600; }
+.sticky-save {
+  position: sticky; bottom: 0; z-index: 3; margin-inline: -16px; padding: 10px 16px;
+  background: var(--bg); border-top: 1px solid var(--line);
+}
+.howto { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; counter-reset: step; }
+.howto li {
+  counter-increment: step; display: grid; grid-template-columns: 34px 1fr; gap: 2px 12px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px;
+}
+.howto li::before {
+  content: counter(step); grid-row: span 2; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+  background: var(--ink); color: var(--accent); font: 700 1.2rem/1 var(--font-display);
+}
+.howto b { font: 700 1.1rem/1.2 var(--font-display); text-transform: uppercase; }
+.howto span { font-size: .9rem; color: var(--muted); }
+.check { display: flex; align-items: center; gap: 10px; min-height: 48px; font-weight: 600; }
+.check input { width: 22px; height: 22px; accent-color: var(--ok); }
+.beta-tag { font: 700 .62rem/1 var(--font-body); text-transform: uppercase; letter-spacing: .1em; color: var(--on-accent); background: var(--accent); border-radius: 4px; padding: 3px 5px; vertical-align: middle; }
+.barcode { background: #fff; border-radius: var(--r); padding: 18px; display: grid; place-items: center; min-height: 160px; }
+.barcode svg { display: block; width: 100%; height: auto; max-width: 360px; }
+.barcode.linear svg { max-width: none; }
+.barcode .msg { color: #5b6878; text-align: center; font-size: .9rem; }
+.seq { font-size: .8rem; color: var(--muted); word-break: break-all; margin: 0; }
+.cmos-progress { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); font-weight: 600; }
+.drop {
+  display: flex; flex-direction: column; gap: 10px; padding: 18px; border: 2px dashed var(--line); border-radius: var(--r);
+  background: var(--surface); text-align: center; align-items: center;
+}
+.drop.over { border-color: var(--accent); }
+.drop b { font: 700 1.3rem/1.1 var(--font-display); text-transform: uppercase; }
+.drop span { font-size: .88rem; color: var(--muted); max-width: 46ch; }
+.imp-row { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; padding: 10px 12px; border-bottom: 1px solid var(--line); align-items: center; }
+.imp-row:last-child { border-bottom: 0; }
+.imp-row input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--accent); grid-row: span 2; }
+.imp-row .imp-top { display: flex; gap: 8px; min-width: 0; }
+.imp-row select { flex: none; min-height: 40px; border-radius: 8px; border: 1px solid var(--line); background: var(--chip); padding: 0 6px; font-weight: 600; }
+.imp-row .input { min-height: 40px; min-width: 0; flex: 1; font-size: 1rem; } /* 16px+ stops iPhone zooming on focus */
+.imp-row small { grid-column: 2; color: var(--muted); font-size: .78rem; }
+.imp-row small .warn { color: var(--warn); font-weight: 700; }
+.imp-row.off { opacity: .55; }
+.pdf-wrap {
+  position: fixed; inset: 0; z-index: 45; display: flex; flex-direction: column;
+  background: var(--bg); padding-top: env(safe-area-inset-top, 0px);
+}
+#pdf-name { text-transform: none; font-size: 1.15rem; letter-spacing: 0; }
+.pdf-status { margin: 0; padding: 10px 16px; font-size: .88rem; color: var(--muted); }
+.pdf-actions {
+  display: flex; gap: 10px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg); border-top: 1px solid var(--line);
+}
+.pdf-actions .btn { flex: 1; min-height: 56px; font: 700 1.2rem/1 var(--font-display); text-transform: uppercase; letter-spacing: .04em; }
+.pdf-actions .btn svg { flex: none; }
+.pdf-pages {
+  flex: 1; overflow: auto; display: flex; flex-direction: column; align-items: center; gap: 14px;
+  padding: 4px 16px 24px; background: var(--chip);
+}
+.pdf-page { display: block; width: 100%; max-width: 900px; height: auto; background: #fff; box-shadow: 0 2px 12px rgba(0, 0, 0, .25); }
+.inline-scan { display: flex; gap: 8px; }
+.inline-scan .input { flex: 1; min-width: 0; }
+.scan-btn {
+  flex: none; width: 50px; min-height: 50px; display: grid; place-items: center;
+  border-radius: var(--r); border: 1px solid var(--line); background: var(--chip); color: var(--ink);
+}
+.scan-btn:active { transform: translateY(1px); }
+.qs-wrap { position: fixed; inset: 0; z-index: 46; background: rgba(10, 15, 20, .6); display: flex; align-items: flex-end; }
+.qs-box {
+  width: 100%; background: var(--bg); border-radius: 16px 16px 0 0; display: flex; flex-direction: column; gap: 12px;
+  padding: 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+.qs-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.qs-head b { font: 700 1.5rem/1 var(--font-display); text-transform: uppercase; }
+.qs-cam { height: 42vh; min-height: 220px; max-height: 380px; border-radius: var(--r); }
+#qs-video { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (min-width: 640px) { .qs-box { max-width: 640px; margin-inline: auto; } }
+.tip { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.tip p { margin: 0; flex: 1; }
+.file-ready { display: flex; flex-direction: column; gap: 4px; }
+.file-ready b { font: 700 1.1rem/1.2 var(--font-display); word-break: break-all; }
 .kind-tag { font: 700 .7rem/1 var(--font-body); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .ciic-chips .chip { min-width: 48px; font-family: var(--font-code); }
 @media (max-width: 380px) { .two { grid-template-columns: 1fr; } }
@@ -274,15 +376,29 @@ button { cursor: pointer; }
 
 <!-- HOME -->
 <section class="screen" id="s-home">
-  <header class="topbar"><h1>Inventory Scan</h1></header>
+  <header class="topbar"><h1>Inventory Scan</h1><button id="btn-settings" type="button">Settings</button></header>
   <div class="body">
+    <div class="warnbox tip" id="ios-tip" hidden>
+      <p><b>Add this app to your Home Screen.</b> In Safari, tap Share, then Add to Home Screen. Safari can clear saved lists for websites you haven't opened in about a week; the Home Screen app keeps them.</p>
+      <button class="linkbtn" type="button" id="ios-tip-close" aria-label="Dismiss tip">Got it</button>
+    </div>
+    <div class="warnbox nudge" id="backup-nudge" hidden>
+      <p>Lists are saved only on this device. Back up so a lost phone or cleared browser doesn't lose them.</p>
+      <button class="btn small" type="button" id="nudge-backup">Back up now</button>
+    </div>
+    <div class="tools">
+      <button class="btn find-btn" id="btn-find" type="button"><b>Find a package</b><span>Scan or type a TCN or tracking #</span></button>
+      <button class="btn find-btn" id="btn-import" type="button"><b>Import document</b><span>Read a PDF, photo or spreadsheet and make barcodes</span></button>
+    </div>
     <div class="label">Start a new list</div>
     <div class="kinds" id="kinds">
       <button class="kind" data-kind="tally"><b>Tally Sheet</b><span>SCAC · TCN · Tracking · Package · Pieces · Weight</span></button>
       <button class="kind" data-kind="weekly"><b>Weekly Inventory</b><span>TCN · Tracking · NSN · Package · Pieces · CIIC · Location</span></button>
       <button class="kind" data-kind="pickup"><b>Customer Pickup</b><span>POC · Unit · TCN · Tracking · Pieces · Weight · Location · Carrier. Prints a tally sheet per customer.</span></button>
     </div>
-    <div class="label">Lists on this phone</div>
+    <div class="label">Lists on this device</div>
+    <input class="input" id="home-search" type="search" enterkeyhint="search" placeholder="Search lists, names, TCN, tracking #" autocomplete="off" aria-label="Search lists">
+    <div class="chips" id="home-filter" role="group" aria-label="Filter lists"></div>
     <div id="home-lists" class="stack"></div>
   </div>
 </section>
@@ -291,8 +407,12 @@ button { cursor: pointer; }
 <section class="screen" id="s-new" hidden>
   <header class="topbar"><button id="new-back">Cancel</button><h2 id="new-title">New List</h2></header>
   <form class="body" id="new-form" novalidate>
-    <div class="field">
-      <label class="label" for="new-member" id="new-member-label">Member name</label>
+    <div class="stamp" id="who-row">
+      <span class="label" id="new-member-label">Member</span>
+      <span><b id="new-who"></b> <button type="button" class="linkbtn" id="who-change">Change</button></span>
+    </div>
+    <div class="field" id="who-edit" hidden>
+      <label class="label" for="new-member">Your name</label>
       <input class="input" id="new-member" autocomplete="name" placeholder="Who is building this list?" required>
     </div>
     <div class="field" id="scac-field">
@@ -315,6 +435,8 @@ button { cursor: pointer; }
     <button class="btn primary block" id="btn-scan">Scan Items</button>
     <div class="row">
       <button class="btn" id="btn-export">Export</button>
+      <button class="btn" id="btn-done" type="button">Mark Done</button>
+      <button class="btn" id="btn-cmos" type="button" hidden>Key into CMOS <span class="beta-tag">Beta</span></button>
       <button class="btn danger" id="btn-del-list">Delete List</button>
     </div>
     <div class="label">Items</div>
@@ -327,6 +449,7 @@ button { cursor: pointer; }
   <header class="topbar">
     <button id="scan-done">Done</button>
     <h2 id="scan-title">Scanning</h2>
+    <button id="mode-toggle" type="button"></button>
   </header>
   <div class="cam" id="cam">
     <video id="video" playsinline muted autoplay></video>
@@ -389,10 +512,11 @@ button { cursor: pointer; }
       <input type="file" id="photo-input" accept="image/*" capture="environment" hidden>
       <div class="pick" id="pick" hidden></div>
       <form class="row" id="type-form" hidden>
-        <input class="input code" id="type-input" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <input class="input code" id="type-input" enterkeyhint="next" autocomplete="off" autocapitalize="characters" spellcheck="false">
         <button class="btn primary" type="submit" style="flex:0 0 auto">Use</button>
       </form>
       <div class="field recent" id="recent"></div>
+      <div class="field" id="find-results" hidden></div>
     </div>
 
     <!-- step: details -->
@@ -415,7 +539,7 @@ button { cursor: pointer; }
         </div>
         <div class="field" id="weight-field">
           <label class="label" for="weight">Weight (lb)</label>
-          <input class="input" id="weight" inputmode="decimal" placeholder="0.0">
+          <input class="input" id="weight" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="0.0">
         </div>
       </div>
       <div class="field" id="ciic-field">
@@ -425,7 +549,8 @@ button { cursor: pointer; }
       </div>
       <div class="field" id="loc-field">
         <label class="label" for="location">Location</label>
-        <input class="input code" id="location" placeholder="e.g. A-12-03" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <input class="input code" id="location" enterkeyhint="done" placeholder="e.g. A-12-03" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <div class="chips" id="loc-chips" role="group" aria-label="Recent locations"></div>
       </div>
       <div class="field" id="carrier-field">
         <span class="label" id="carrier-label">Carrier</span>
@@ -436,9 +561,198 @@ button { cursor: pointer; }
         <label class="label" for="arr-date">Arr date</label>
         <input class="input code" id="arr-date" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="15OCT">
       </div>
-      <button class="btn primary block" type="submit">Save &amp; Scan Next</button>
+      <div class="sticky-save"><button class="btn primary block" type="submit">Save &amp; Scan Next</button></div>
     </form>
   </div>
+</section>
+
+<!-- SETTINGS -->
+<section class="screen" id="s-settings" hidden>
+  <header class="topbar"><button id="settings-back" type="button">Back</button><h2>Settings</h2></header>
+  <div class="body">
+    <form class="field" id="name-form" novalidate>
+      <label class="label" for="set-name">Your name</label>
+      <div class="row">
+        <input class="input" id="set-name" autocomplete="name" placeholder="e.g. SPC Jones">
+        <button class="btn" type="submit" style="flex:0 0 auto">Save</button>
+      </div>
+      <p class="hint">Filled in as Member or In-checker on every new list.</p>
+    </form>
+    <div class="field">
+      <span class="label" id="mode-label">Entry mode</span>
+      <div class="chips" id="mode-chips" role="group" aria-labelledby="mode-label"></div>
+      <p class="hint" id="mode-hint"></p>
+    </div>
+    <div class="field">
+      <span class="label">Backup</span>
+      <p class="hint">Lists are stored only in this browser on this device. A backup file restores them here or on another device.</p>
+      <div class="row">
+        <button class="btn" type="button" id="btn-backup">Back up all lists</button>
+        <button class="btn" type="button" id="btn-restore">Restore from backup</button>
+      </div>
+      <input type="file" id="restore-input" accept=".json,application/json" hidden>
+      <p class="hint" id="backup-info"></p>
+    </div>
+    <div class="field">
+      <span class="label">Install</span>
+      <p class="hint" id="install-info"></p>
+      <button class="btn" type="button" id="btn-install" hidden>Install app on this device</button>
+    </div>
+    <div class="field">
+      <span class="label">Downloads</span>
+      <label class="check"><input type="checkbox" id="set-preview"> Preview PDFs before downloading</label>
+    </div>
+    <div class="field">
+      <span class="label">Beta features</span>
+      <label class="check"><input type="checkbox" id="set-beta-cmos"> CMOS keying for Tally Sheets</label>
+      <p class="hint">Adds Key into CMOS to Tally Sheets. The phone shows one barcode per CMOS screen; scanning it with the desk scanner types the fields and Tabs for you. Test your scanner first from that screen.</p>
+    </div>
+    <div class="field">
+      <span class="label">Help</span>
+      <button class="btn" type="button" id="btn-guide">Show the quick guide</button>
+    </div>
+  </div>
+</section>
+
+<!-- IMPORT DOCUMENT -->
+<section class="screen" id="s-import" hidden>
+  <header class="topbar"><button id="imp-back" type="button">Back</button><h2>Import document</h2></header>
+  <div class="body" id="imp-body">
+    <div class="drop" id="imp-drop">
+      <b>Add files</b>
+      <span>PDFs, photos (JPG, PNG, HEIC), Excel (.xlsx), CSV or text files. Pick several at once. On a computer you can drag files here.</span>
+      <div class="row" style="width:100%">
+        <button class="btn primary" type="button" id="imp-pick">Choose files</button>
+        <button class="btn" type="button" id="imp-photo">Take photo</button>
+      </div>
+    </div>
+    <input type="file" id="imp-input" multiple accept=".pdf,application/pdf,image/*,.heic,.heif,.xlsx,.csv,.txt,text/plain,text/csv" hidden>
+    <input type="file" id="imp-cam" accept="image/*" capture="environment" hidden>
+    <p class="hint" id="imp-status" aria-live="polite"></p>
+
+    <div class="field" id="imp-results" hidden>
+      <div class="cmos-progress"><span id="imp-count"></span><span><button class="linkbtn" type="button" id="imp-all">Select all</button> · <button class="linkbtn" type="button" id="imp-none">None</button> · <button class="linkbtn" type="button" id="imp-clear">Start over</button></span></div>
+      <div class="items" id="imp-list"></div>
+      <p class="hint">Check each code against the document. Items marked <b style="color:var(--warn)">check</b> were read from a photo or scan and may have a misread character.</p>
+      <div class="sticky-save" style="display:flex;flex-wrap:wrap;gap:8px">
+        <button class="btn primary" type="button" id="imp-sheet" style="flex:1 1 100%">Barcode sheet (PDF)</button>
+        <button class="btn" type="button" id="imp-tally" style="flex:1 1 140px">Add to Tally Sheet</button>
+        <button class="btn" type="button" id="imp-show" style="flex:1 1 140px">Show on screen</button>
+      </div>
+    </div>
+
+    <div class="field" id="imp-view" hidden style="gap:12px">
+      <div class="cmos-progress"><span id="imp-view-pos"></span><button class="linkbtn" type="button" id="imp-view-close">Back to list</button></div>
+      <p class="prompt" id="imp-view-title"></p>
+      <div class="barcode" id="imp-view-code"></div>
+      <p class="seq code" id="imp-view-val"></p>
+      <div class="row">
+        <button class="btn" type="button" id="imp-view-prev">Back</button>
+        <button class="btn primary" type="button" id="imp-view-next">Next</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="sheet-wrap" id="imp-target-wrap" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="imp-target-title">
+    <h3 id="imp-target-title">Add to Tally Sheet</h3>
+    <p class="hint" id="imp-target-sum"></p>
+    <div class="cust-pick" id="imp-target-list"></div>
+    <button class="btn primary" type="button" id="imp-target-new">New Tally Sheet</button>
+    <button class="btn" type="button" id="imp-target-cancel">Cancel</button>
+  </div>
+</div>
+
+<!-- CMOS KEYING (beta) -->
+<section class="screen" id="s-cmos" hidden>
+  <header class="topbar"><button id="cmos-back" type="button">Done</button><h2>Key into CMOS</h2><button id="cmos-setup-btn" type="button">Setup</button></header>
+  <div class="body">
+    <form id="cmos-setup" class="field" style="gap:14px" novalidate>
+      <p class="hint"><span class="beta-tag">Beta</span> Fills CMOS by scanning barcodes from this screen with the desk scanner. Check every field before you save in CMOS.</p>
+      <div class="field">
+        <span class="label" id="cm-doc-label">Movement Doc Nbr</span>
+        <div class="chips" id="cm-docmode" role="group" aria-labelledby="cm-doc-label"></div>
+        <input class="input code" id="cm-bol" placeholder="BOL number for the whole list" autocapitalize="characters" spellcheck="false" hidden>
+      </div>
+      <div class="two">
+        <div class="field"><label class="label" for="cm-scac">SCAC</label><input class="input code" id="cm-scac" maxlength="4" autocapitalize="characters"></div>
+        <div class="field"><label class="label" for="cm-type">TCN type</label><input class="input code" id="cm-type" maxlength="2" autocapitalize="characters"></div>
+      </div>
+      <div class="field">
+        <label class="label" for="cm-arrival">Arrival date/time (DDMMMYYYY/HHMM)</label>
+        <div class="row"><input class="input code" id="cm-arrival" autocapitalize="characters" spellcheck="false"><button class="btn" type="button" id="cm-now" style="flex:0 0 auto">Now</button></div>
+      </div>
+      <div class="field">
+        <span class="label" id="cm-mil-label">MIL mode</span>
+        <div class="chips" id="cm-mil" role="group" aria-labelledby="cm-mil-label"></div>
+        <input class="input code" id="cm-mil-other" maxlength="1" placeholder="Type MIL mode" autocapitalize="characters" hidden>
+      </div>
+      <div class="two">
+        <div class="field"><label class="label" for="cm-consignor">Consignor</label><input class="input code" id="cm-consignor" autocapitalize="characters"></div>
+        <div class="field"><label class="label" for="cm-consignee">Consignee</label><input class="input code" id="cm-consignee" autocapitalize="characters"></div>
+      </div>
+      <div class="field">
+        <span class="label" id="cm-ciic-label">CIIC</span>
+        <div class="chips ciic-chips" id="cm-ciic" role="group" aria-labelledby="cm-ciic-label"></div>
+      </div>
+      <div class="field">
+        <span class="label" id="cm-sym-label">Barcode style</span>
+        <div class="chips" id="cm-sym" role="group" aria-labelledby="cm-sym-label"></div>
+        <p class="hint">QR works with 2D scanners and is easiest to read off a phone. Laser-only scanners can't read phone screens.</p>
+      </div>
+      <div class="field">
+        <button class="btn" type="button" id="cm-test-btn">Scanner test</button>
+        <div class="field" id="cm-test" hidden>
+          <p class="hint">Open Notepad (or any two text boxes) on the CMOS computer, click in it, and scan. If the scanner sends Tabs, TEST and 123 land in separate fields or are separated by a tab. If you see TEST123, the scanner needs its control-character setting turned on.</p>
+          <div class="barcode" id="cm-test-code"></div>
+        </div>
+      </div>
+      <p class="hint" id="cm-err" style="color:var(--danger)" hidden></p>
+      <button class="btn primary block" type="submit">Start Keying</button>
+    </form>
+
+    <div id="cmos-run" class="field" style="gap:12px" hidden>
+      <div class="cmos-progress"><span id="cm-prog-doc"></span><span id="cm-prog-tcn"></span></div>
+      <p class="prompt" id="cm-title"></p>
+      <p class="hint" id="cm-instr"></p>
+      <div class="field" id="cm-docin" hidden>
+        <label class="label" for="cm-docnbr">Movement Doc Nbr for this shipment</label>
+        <input class="input code" id="cm-docnbr" autocapitalize="characters" spellcheck="false" placeholder="Tracking or BOL number">
+      </div>
+      <div class="barcode" id="cm-code"></div>
+      <p class="seq code" id="cm-seq"></p>
+      <div class="row" id="cm-check-btns">
+        <button class="btn" type="button" id="cm-found">In CMOS · skip</button>
+        <button class="btn primary" type="button" id="cm-notfound">Not in CMOS</button>
+      </div>
+      <div class="row">
+        <button class="btn" type="button" id="cm-prev">Back</button>
+        <button class="btn primary" type="button" id="cm-next">Next</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WELCOME / QUICK GUIDE -->
+<section class="screen" id="s-welcome" hidden>
+  <header class="topbar"><h1>Inventory Scan</h1></header>
+  <form class="body" id="welcome-form" novalidate>
+    <p class="prompt">How it works</p>
+    <ol class="howto">
+      <li><b>Start a list</b><span>Tally Sheet, Weekly Inventory, or Customer Pickup. Your name and the date fill in automatically.</span></li>
+      <li><b>Scan each item</b><span>Point the camera at the barcode; it beeps and moves on. Use Type it or Photo for hard labels. On a computer, type or use a USB scanner.</span></li>
+      <li><b>Fix anything</b><span>Tap any saved item to edit it. After a save or delete, tap Undo in the message at the bottom.</span></li>
+      <li><b>Export and back up</b><span>Export PDF, Excel, or CSV from a list. Back up all lists from Settings, since they live only on this device.</span></li>
+    </ol>
+    <div class="field">
+      <label class="label" for="welcome-name">Your name</label>
+      <input class="input" id="welcome-name" autocomplete="name" placeholder="e.g. SPC Jones">
+      <p class="hint">Shown as Member or In-checker on your lists. You can change it in Settings.</p>
+    </div>
+    <p class="hint" id="welcome-err" style="color:var(--danger)" hidden></p>
+    <button class="btn primary block" type="submit" id="welcome-go">Get Started</button>
+  </form>
 </section>
 
 <!-- EDIT ITEM SHEET -->
@@ -455,15 +769,24 @@ button { cursor: pointer; }
     </div>
     <div class="field">
       <label class="label" for="e-tcn">TCN (leave blank for No TCN)</label>
-      <input class="input code" id="e-tcn" autocapitalize="characters" spellcheck="false">
+      <div class="inline-scan">
+        <input class="input code" id="e-tcn" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <button type="button" class="scan-btn" data-scan="e-tcn" data-look="tcn" data-label="TCN" aria-label="Scan TCN with the camera"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="currentColor"><path d="M3 4h2v16H3zM7 4h1v16H7zM10 4h2v16h-2zM14 4h1v16h-1zM17 4h1v16h-1zM20 4h1v16h-1z"/></svg></button>
+      </div>
     </div>
     <div class="field">
       <label class="label" for="e-trk">Tracking number (leave blank for none)</label>
-      <input class="input code" id="e-trk" autocapitalize="characters" spellcheck="false">
+      <div class="inline-scan">
+        <input class="input code" id="e-trk" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <button type="button" class="scan-btn" data-scan="e-trk" data-look="trk" data-label="tracking number" aria-label="Scan tracking number with the camera"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="currentColor"><path d="M3 4h2v16H3zM7 4h1v16H7zM10 4h2v16h-2zM14 4h1v16h-1zM17 4h1v16h-1zM20 4h1v16h-1z"/></svg></button>
+      </div>
     </div>
     <div class="field" data-kinds="weekly">
       <label class="label" for="e-nsn">NSN (leave blank for No NSN)</label>
-      <input class="input code" id="e-nsn" autocapitalize="characters" spellcheck="false">
+      <div class="inline-scan">
+        <input class="input code" id="e-nsn" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <button type="button" class="scan-btn" data-scan="e-nsn" data-look="nsn" data-label="NSN" aria-label="Scan NSN with the camera"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="currentColor"><path d="M3 4h2v16H3zM7 4h1v16H7zM10 4h2v16h-2zM14 4h1v16h-1zM17 4h1v16h-1zM20 4h1v16h-1z"/></svg></button>
+      </div>
     </div>
     <div class="field" data-kinds="tally weekly">
       <label class="label" for="e-pkg">Package type</label>
@@ -476,12 +799,13 @@ button { cursor: pointer; }
     </div>
     <div class="field" data-kinds="weekly pickup">
       <label class="label" for="e-loc">Location</label>
-      <input class="input code" id="e-loc" autocapitalize="characters" spellcheck="false">
+      <input class="input code" id="e-loc" autocomplete="off" autocapitalize="characters" spellcheck="false">
     </div>
     <div class="two" data-kinds="pickup">
-      <div class="field"><label class="label" for="e-carrier">Carrier</label><input class="input code" id="e-carrier" maxlength="4" autocapitalize="characters"></div>
-      <div class="field"><label class="label" for="e-arr">Arr date</label><input class="input code" id="e-arr" maxlength="5" autocapitalize="characters"></div>
+      <div class="field"><label class="label" for="e-carrier">Carrier</label><input class="input code" id="e-carrier" autocomplete="off" maxlength="4" autocapitalize="characters"></div>
+      <div class="field"><label class="label" for="e-arr">Arr date</label><input class="input code" id="e-arr" autocomplete="off" maxlength="5" autocapitalize="characters"></div>
     </div>
+    <label class="check" data-kinds="pickup"><input type="checkbox" id="e-picked"> Picked up by customer</label>
     <button class="btn primary block" type="submit">Save Changes</button>
     <div class="row">
       <button class="btn" type="button" id="e-cancel">Cancel</button>
@@ -495,6 +819,7 @@ button { cursor: pointer; }
   <div class="sheet" role="dialog" aria-labelledby="export-title">
     <h3 id="export-title">Export List</h3>
     <p class="hint" id="export-sum"></p>
+    <label class="check"><input type="checkbox" id="export-codes"> <span id="export-codes-label">Print barcodes on the PDF</span></label>
     <button class="btn export-opt" data-fmt="pdf"><b id="pdf-opt-title">PDF</b><span id="pdf-opt-sub">Printable report with header and totals</span></button>
     <button class="btn export-opt" data-fmt="xlsx"><b>Excel</b><span>.xlsx spreadsheet, opens in Excel or Sheets</span></button>
     <button class="btn export-opt" data-fmt="csv"><b>CSV</b><span>Plain data file for uploading to other systems</span></button>
@@ -502,19 +827,69 @@ button { cursor: pointer; }
   </div>
 </div>
 
-<div class="toast hide" id="toast" role="status" aria-live="polite"></div>
+<!-- QUICK SCAN: fills one field from the camera -->
+<div class="qs-wrap" id="qs-wrap" role="dialog" aria-labelledby="qs-title" hidden>
+  <div class="qs-box">
+    <div class="qs-head"><b id="qs-title">Scan</b><button class="btn small" type="button" id="qs-cancel">Cancel</button></div>
+    <div class="cam qs-cam">
+      <video id="qs-video" playsinline muted autoplay></video>
+      <div class="guide" aria-hidden="true"></div>
+      <div class="cam-msg" id="qs-msg">Starting camera…</div>
+    </div>
+    <p class="hint">Hold the barcode in the frame. It fills in by itself.</p>
+    <div class="row">
+      <button class="btn" type="button" id="qs-photo">Photo</button>
+      <button class="btn" type="button" id="qs-torch" aria-pressed="false" hidden>Light</button>
+    </div>
+    <input type="file" id="qs-photo-input" accept="image/*" capture="environment" hidden>
+  </div>
+</div>
+
+<!-- FILE READY: Share or Download (non-PDF files on phones) -->
+<div class="sheet-wrap" id="file-wrap" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="file-title">
+    <h3 id="file-title">File ready</h3>
+    <div class="file-ready"><b id="file-name"></b><span class="hint" id="file-size"></span></div>
+    <div class="row">
+      <button class="btn" type="button" id="file-share">Share</button>
+      <button class="btn primary" type="button" id="file-download">Download</button>
+    </div>
+    <button class="btn" type="button" id="file-cancel">Cancel</button>
+  </div>
+</div>
+
+<!-- PDF PREVIEW (before download) -->
+<div class="pdf-wrap" id="pdf-wrap" role="dialog" aria-labelledby="pdf-name" hidden>
+  <header class="topbar"><button id="pdf-cancel" type="button">Cancel</button><h2 id="pdf-name">Preview</h2></header>
+  <p class="pdf-status" id="pdf-status" aria-live="polite"></p>
+  <div class="pdf-pages" id="pdf-pages"></div>
+  <div class="pdf-actions">
+    <button class="btn" type="button" id="pdf-share" hidden>
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>
+      Share
+    </button>
+    <button class="btn primary" type="button" id="pdf-download">Download</button>
+  </div>
+</div>
+
+<div class="toast hide" id="toast" role="status" aria-live="polite"><span id="toast-msg"></span><button type="button" id="toast-undo" hidden>Undo</button></div>
 
 <script src="vendor/zxing/zxing-reader.js"></script>
 <script>
 (() => {
   'use strict';
-  const COMMON_SCACS = ['FDE', 'UPSN', 'PAZC'];
+  const COMMON_SCACS = ['FDE', 'UPSN', 'PAZC', 'TOTE', 'SPAN', 'LTIA', 'CEPH'];
+  // Codes that don't read as the carrier's name get a hint on their button.
+  const SCAC_NAMES = { CEPH: 'Carlile' };
+  const scacLabel = c => SCAC_NAMES[c] ? `${c} · ${SCAC_NAMES[c]}` : c;
   const PKG_TYPES = ['Box', 'Pallet', 'Envelope', 'Crate', 'Tube', 'Bag', 'Drum'];
   const CIIC_CODES = ['U', 'J', '7', '9', 'Q', 'R'];
   const KINDS = { tally: 'Tally Sheet', weekly: 'Weekly Inventory', pickup: 'Customer Pickup' };
   const isWeekly = l => l && l.kind === 'weekly';
   const isPickup = l => l && l.kind === 'pickup';
   const hasScac = l => l && l.kind === 'tally';
+  // Barcodes on exported PDFs: on by default for Tally Sheets, opt-in for the others (set in the Export menu).
+  const wantCodes = l => { const b = store.barcodes || {}; return l.kind in b ? !!b[l.kind] : l.kind === 'tally'; };
   const tagOf = l => isWeekly(l) ? 'WEEKLY' : isPickup(l) ? 'PICKUP' : l.scac;
   const KEY = 'inventory-scan.v1';
   const $ = s => document.querySelector(s);
@@ -522,9 +897,16 @@ button { cursor: pointer; }
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
   // ---------- storage ----------
-  let store = { lists: [], lastMember: '', lastPkg: 'Box', lastLocation: '', lastCarrier: '' };
+  let store = { lists: [], userName: '', lastMember: '', lastPkg: 'Box', lastLocation: '', lastCarrier: '', recentLocations: [], lastBackup: '' };
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.lists)) store = Object.assign(store, s); } catch {}
   store.lists.forEach(l => { if (!l.kind) l.kind = 'tally'; });
+  store.userName = store.userName || store.lastMember || '';
+  if (!store.recentLocations.length && store.lastLocation) store.recentLocations = [store.lastLocation];
+  // Most-recent-first list of locations, offered as one-tap buttons.
+  const rememberLocation = loc => {
+    if (!loc) return;
+    store.recentLocations = [loc, ...store.recentLocations.filter(x => x !== loc)].slice(0, 6);
+  };
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch {} };
   try { navigator.storage?.persist?.(); } catch {}
 
@@ -572,30 +954,118 @@ button { cursor: pointer; }
     f.classList.add('on'); setTimeout(() => f.classList.remove('on'), 220);
   }
   let toastT;
-  function toast(msg) {
-    const t = $('#toast'); t.textContent = msg; t.classList.remove('hide');
-    clearTimeout(toastT); toastT = setTimeout(() => t.classList.add('hide'), 2200);
+  // A message at the bottom; pass undo to offer an Undo button for a few seconds.
+  function toast(msg, undo) {
+    const t = $('#toast'), b = $('#toast-undo');
+    $('#toast-msg').textContent = msg;
+    b.hidden = !undo;
+    b.onclick = undo ? () => { b.hidden = true; undo(); toast('Undone'); } : null;
+    t.classList.remove('hide');
+    placeToast();
+    clearTimeout(toastT); toastT = setTimeout(() => t.classList.add('hide'), undo ? 5000 : 2200);
   }
-  // Two-tap confirm (no native dialogs): first tap arms the button, second tap within 3s runs it.
-  function confirmTap(btn, label, fn) {
-    if (btn.dataset.armed) { delete btn.dataset.armed; btn.textContent = btn.dataset.orig; fn(); return; }
-    btn.dataset.orig = btn.textContent; btn.dataset.armed = '1'; btn.textContent = label;
-    setTimeout(() => { if (btn.dataset.armed) { delete btn.dataset.armed; btn.textContent = btn.dataset.orig; } }, 3000);
+  // Keep the message above a visible bottom action bar (Save, Share/Download, import actions) instead of
+  // covering it. Re-run when screens change underneath it.
+  function placeToast() {
+    const t = $('#toast');
+    if (t.classList.contains('hide')) return;
+    const bar = ['#pdf-wrap .pdf-actions', '#p-det .sticky-save', '#imp-results .sticky-save']
+      .map(q => document.querySelector(q))
+      .find(el => el && !el.closest('[hidden]') && el.getClientRects().length);
+    t.style.bottom = bar ? `${Math.max(20, window.innerHeight - bar.getBoundingClientRect().top + 10)}px` : '';
   }
+  window.addEventListener('resize', placeToast);
+
+  // Redraw whichever screen is showing after data changes (used by Undo).
+  function refreshViews() {
+    if (!$('#s-home').hidden) renderHome();
+    if (!$('#s-list').hidden && current) renderList();
+    if (!$('#s-scan').hidden && current && SCAN[step] && step !== 'find') {
+      renderRecent();
+      $('#scan-title').textContent = `${tagOf(current)} · Item ${current.items.length + 1}`;
+    }
+  }
+
+  // ---------- input mode: camera on phones/tablets, keyboard on laptops/desktops ----------
+  const isTouchDevice = () => {
+    const coarse = window.matchMedia?.('(pointer: coarse)').matches;
+    const iPadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1; // iPad reports as a Mac
+    const mobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    return !!(coarse || iPadOS || mobileUA);
+  };
+  // A choice made with the header button sticks on this device; otherwise follow the device type.
+  let inputMode = store.inputMode || (isTouchDevice() ? 'scan' : 'type');
+  const typing = () => inputMode === 'type';
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isStandalone = () => window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
+
+  // Back button / back gesture: step back inside the app (close a panel, or go to the previous screen)
+  // instead of leaving it. One history entry is kept "armed" whenever there is somewhere to go back to.
+  let backArmed = false, skipPop = false;
+  const armBack = () => { if (!backArmed) { history.pushState({ app: 'inventory-scan' }, ''); backArmed = true; } };
+  const OVERLAYS = [
+    ['#qs-wrap', () => closeQuickScan()], ['#pdf-wrap', () => closePreview()], ['#file-wrap', () => closeFile()],
+    ['#imp-target-wrap', () => { $('#imp-target-wrap').hidden = true; }], ['#export-wrap', () => closeExport()], ['#edit-wrap', () => closeEdit()]
+  ];
+  const SCREEN_BACK = { 's-new': '#new-back', 's-list': '#list-back', 's-scan': '#scan-done', 's-settings': '#settings-back', 's-import': '#imp-back', 's-cmos': '#cmos-back' };
+  function closeTopOverlay() {
+    for (const [sel, close] of OVERLAYS) if (!$(sel).hidden) { close(); return true; }
+    return false;
+  }
+  function goBack() {
+    if (closeTopOverlay()) return true;
+    const cur = [...document.querySelectorAll('.screen')].find(x => !x.hidden)?.id;
+    if (SCREEN_BACK[cur]) { $(SCREEN_BACK[cur]).click(); return true; }
+    return false;
+  }
+  window.addEventListener('popstate', () => {
+    backArmed = false;
+    if (skipPop) { skipPop = false; return; }
+    goBack();
+    // Re-arm only if there is still somewhere to go back to (a panel, or a screen other than Home).
+    const cur = [...document.querySelectorAll('.screen')].find(x => !x.hidden)?.id;
+    if (SCREEN_BACK[cur] || OVERLAYS.some(([sel]) => !$(sel).hidden)) armBack();
+  });
+  // Escape closes the open panel on computers.
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTopOverlay(); });
+  // Opening any panel arms Back so it closes the panel.
+  new MutationObserver(() => { if (OVERLAYS.some(([sel]) => !$(sel).hidden)) armBack(); placeToast(); })
+    .observe(document.body, { subtree: true, attributes: true, attributeFilter: ['hidden'] });
 
   // ---------- navigation ----------
   let current = null; // active list
   function show(id) {
     document.querySelectorAll('.screen').forEach(s => s.hidden = s.id !== id);
     if (id !== 's-scan') { stopCamera(); releaseWake(); }
+    if (SCREEN_BACK[id]) armBack();
+    else if (backArmed) { backArmed = false; skipPop = true; history.back(); } // back on Home: nothing to undo
+    window.scrollTo(0, 0);
   }
 
   // ---------- home ----------
+  const FILTERS = [['all', 'Open'], ['tally', 'Tally'], ['weekly', 'Weekly'], ['pickup', 'Pickup'], ['done', 'Done']];
+  let homeFilter = 'all';
   function renderHome() {
     const el = $('#home-lists');
-    const lists = [...store.lists].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    // Back-up reminder: lists exist and no backup in the last 7 days.
+    const stale = !store.lastBackup || Date.now() - new Date(store.lastBackup) > 7 * 864e5;
+    $('#backup-nudge').hidden = !(store.lists.some(l => l.items.length) && stale);
+    $('#ios-tip').hidden = !(isIOS && !isStandalone() && !store.iosTipDone);
+    $('#home-filter').innerHTML = FILTERS.map(([v, label]) =>
+      `<button type="button" class="chip" data-v="${v}" aria-pressed="${homeFilter === v}">${label}</button>`).join('');
+    const all = [...store.lists].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    if (!all.length) {
+      el.innerHTML = `<div class="empty"><strong>No lists yet</strong>Choose a list type above to start scanning.</div>`;
+      return;
+    }
+    const q = $('#home-search').value.trim().toUpperCase();
+    const lists = all
+      .filter(l => homeFilter === 'done' ? l.done : !l.done && (homeFilter === 'all' || l.kind === homeFilter))
+      .filter(l => !q || [listTitle(l), l.member, KINDS[l.kind],
+        ...l.items.flatMap(it => [it.tcn, it.tracking, it.nsn, it.poc, it.unit, it.location])]
+        .some(v => v && String(v).toUpperCase().includes(q)));
     if (!lists.length) {
-      el.innerHTML = `<div class="empty"><strong>No lists yet</strong>Choose a list type above, enter your name, then start scanning.</div>`;
+      el.innerHTML = `<div class="empty"><strong>Nothing here</strong>${q ? 'No list matches that search.' : homeFilter === 'done' ? 'Lists you mark done appear here.' : 'No open lists of this type.'}</div>`;
       return;
     }
     el.innerHTML = lists.map(l => {
@@ -604,10 +1074,19 @@ button { cursor: pointer; }
         <span class="scac-tag">${esc(tagOf(l))}</span>
         <span class="who">${esc(l.member)}</span>
         <span class="count">${t.items}<small>items</small></span>
-        <span class="when"><span class="kind-tag">${KINDS[l.kind]}</span> · ${esc(fmtDate(l.createdAt))}</span>
+        <span class="when"><span class="kind-tag">${KINDS[l.kind]}</span>${l.done ? ' <span class="done-tag">Done</span>' : ''} · ${esc(fmtDate(l.createdAt))}</span>
       </button>`;
     }).join('');
   }
+  $('#home-search').addEventListener('input', renderHome);
+  $('#ios-tip-close').addEventListener('click', () => { store.iosTipDone = true; save(); renderHome(); });
+  $('#home-filter').addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    homeFilter = b.dataset.v; renderHome();
+  });
+  $('#btn-find').addEventListener('click', () => startFind());
+  $('#btn-settings').addEventListener('click', () => { renderSettings(); show('s-settings'); });
+  $('#nudge-backup').addEventListener('click', () => backupAll());
   $('#home-lists').addEventListener('click', e => {
     const b = e.target.closest('.list-card'); if (!b) return;
     openList(store.lists.find(l => l.id === b.dataset.id));
@@ -619,7 +1098,7 @@ button { cursor: pointer; }
     const isOther = newScac === 'OTHER';
     $('#scac-chips').innerHTML = [...COMMON_SCACS, 'Other'].map(s => {
       const v = s === 'Other' ? 'OTHER' : s;
-      return `<button type="button" class="chip scac" data-v="${v}" aria-pressed="${newScac === v}">${s}</button>`;
+      return `<button type="button" class="chip scac" data-v="${v}" aria-pressed="${newScac === v}">${scacLabel(s)}</button>`;
     }).join('');
     $('#new-scac-other').hidden = !isOther;
   }
@@ -630,20 +1109,34 @@ button { cursor: pointer; }
   });
   $('#kinds').addEventListener('click', e => {
     const k = e.target.closest('.kind'); if (!k) return;
-    newKind = k.dataset.kind;
+    pendingImport = null;
+    openNewList(k.dataset.kind);
+  });
+  let pendingImport = null; // items waiting to go into a new list (from Import document)
+  function openNewList(kind) {
+    newKind = kind;
     $('#new-title').textContent = 'New ' + KINDS[newKind];
     $('#scac-field').hidden = newKind !== 'tally';
     $('#new-member-label').textContent = newKind === 'pickup' ? 'In-checker name' : 'Member name';
     newScac = ''; renderScacChips();
-    $('#new-member').value = store.lastMember || '';
+    $('#new-member').value = store.userName || '';
+    $('#new-who').textContent = store.userName;
+    $('#who-row').hidden = !store.userName;
+    $('#who-edit').hidden = !!store.userName;
     $('#new-scac-other').value = '';
     $('#new-err').hidden = true;
     const tick = () => $('#new-stamp').textContent = fmtDate(new Date().toISOString());
     tick(); clearInterval(stampTimer); stampTimer = setInterval(tick, 15000);
     show('s-new');
-    if (!store.lastMember) $('#new-member').focus();
+    if (!store.userName) $('#new-member').focus();
+  }
+  $('#who-change').addEventListener('click', () => {
+    $('#who-row').hidden = true; $('#who-edit').hidden = false; $('#new-member').focus(); $('#new-member').select();
   });
-  $('#new-back').addEventListener('click', () => { clearInterval(stampTimer); show('s-home'); });
+  $('#new-back').addEventListener('click', () => {
+    clearInterval(stampTimer);
+    if (pendingImport) { pendingImport = null; show('s-import'); } else show('s-home');
+  });
   $('#new-form').addEventListener('submit', e => {
     e.preventDefault();
     const member = $('#new-member').value.trim();
@@ -652,8 +1145,14 @@ button { cursor: pointer; }
     if (err) { $('#new-err').textContent = err; $('#new-err').hidden = false; return; }
     clearInterval(stampTimer);
     const list = { id: uid(), kind: newKind, member, scac, createdAt: new Date().toISOString(), items: [] };
-    store.lists.push(list); store.lastMember = member; save();
+    store.lists.push(list); store.userName = member; save();
     current = list;
+    if (pendingImport) {
+      list.items.push(...pendingImport);
+      const n = pendingImport.length; pendingImport = null; save();
+      openList(list); toast(`Added ${n} imported item${n === 1 ? '' : 's'}`);
+      return;
+    }
     startScan();
   });
 
@@ -662,7 +1161,9 @@ button { cursor: pointer; }
   function renderList() {
     const l = current, t = totals(l);
     $('#list-title').textContent = `${tagOf(l)} · ${l.items.length} items`;
-    $('#list-meta').innerHTML = `<dt>Type</dt><dd>${KINDS[l.kind]}</dd><dt>${isPickup(l) ? 'In-checker' : 'Member'}</dt><dd>${esc(l.member)}</dd>${hasScac(l) ? `<dt>SCAC</dt><dd class="code">${esc(l.scac)}</dd>` : ''}<dt>Created</dt><dd>${esc(fmtDate(l.createdAt))}</dd>`;
+    $('#btn-done').textContent = l.done ? 'Reopen List' : 'Mark Done';
+    $('#btn-cmos').hidden = !(store.betaCmos && hasScac(l));
+    $('#list-meta').innerHTML = `<dt>Type</dt><dd>${KINDS[l.kind]}${l.done ? ' <span class="done-tag">Done</span>' : ''}</dd><dt>${isPickup(l) ? 'In-checker' : 'Member'}</dt><dd>${esc(l.member)}</dd>${hasScac(l) ? `<dt>SCAC</dt><dd class="code">${esc(l.scac)}</dd>` : ''}<dt>Created</dt><dd>${esc(fmtDate(l.createdAt))}</dd>`;
     $('#list-totals').innerHTML = isPickup(l) ? `
       <div class="total"><b>${customersOf(l).length}</b><span>Customers</span></div>
       <div class="total"><b>${t.items}</b><span>Items</span></div>
@@ -677,18 +1178,27 @@ button { cursor: pointer; }
       const cs = customersOf(l);
       $('#list-items').innerHTML = cs.length ? cs.map((c, ci) => `
         <div class="cust-head">
-          <div><b>${esc(c.poc || 'No POC')}</b><span>${esc(c.unit || 'No unit')} · ${c.items.length} item${c.items.length === 1 ? '' : 's'}, ${c.items.reduce((a, x) => a + (+x.it.pieces || 0), 0)} pcs</span></div>
-          <button class="btn small" type="button" data-sheet="${ci}">Sheet PDF</button>
+          <div><b>${esc(c.poc || 'No POC')}</b><span>${esc(c.unit || 'No unit')} · ${c.items.length} item${c.items.length === 1 ? '' : 's'}, ${pcsLabel(c.items.reduce((a, x) => a + (+x.it.pieces || 0), 0))}${pickedLabel(c)}</span></div>
+          <span class="cust-actions">
+            <button class="btn small" type="button" data-picked="${ci}">${c.items.every(x => x.it.pickedUpAt) ? 'Not picked up' : 'Picked up'}</button>
+            <button class="btn small" type="button" data-sheet="${ci}">Sheet PDF</button>
+          </span>
         </div>
         ${c.items.map(x => itemHtml(l, x.it, x.i)).join('')}`).join('') : empty;
     } else {
       $('#list-items').innerHTML = l.items.length ? l.items.map((it, i) => itemHtml(l, it, i)).join('') : empty;
     }
   }
+  const pcsLabel = n => `${n} pc${n === 1 ? '' : 's'}`;
+  const pickedLabel = c => {
+    const n = c.items.filter(x => x.it.pickedUpAt).length;
+    return n ? ` · <span class="picked">${n === c.items.length ? 'All' : n + ' of ' + c.items.length} picked up</span>` : '';
+  };
   function itemHtml(l, it, i) {
     const pcs = `${it.pieces} pc${it.pieces == 1 ? '' : 's'}`;
     const det = isPickup(l)
       ? [it.arrDate, pcs, it.weight ? esc(it.weight) + ' lb' : '', esc(it.location), esc(it.carrier)].filter(Boolean).join(' · ')
+        + (it.pickedUpAt ? ` · <span class="picked">Picked up ${esc(fmtDate(it.pickedUpAt))}</span>` : '')
       : `${esc(it.pkgType)} · ${pcs}${isWeekly(l)
           ? (it.ciic ? ' · CIIC ' + esc(it.ciic) : '') + (it.location ? ' · ' + esc(it.location) : '')
           : (it.weight ? ' · ' + esc(it.weight) + ' lb' : '')}`;
@@ -704,11 +1214,30 @@ button { cursor: pointer; }
   }
   $('#list-back').addEventListener('click', () => { renderHome(); show('s-home'); });
   $('#btn-scan').addEventListener('click', () => startScan());
-  $('#btn-del-list').addEventListener('click', e => confirmTap(e.currentTarget, 'Tap again to delete', () => {
-    store.lists = store.lists.filter(l => l !== current); save();
-    toast('List deleted'); renderHome(); show('s-home');
-  }));
+  $('#btn-del-list').addEventListener('click', () => {
+    const list = current;
+    store.lists = store.lists.filter(l => l !== list); save();
+    renderHome(); show('s-home');
+    toast('List deleted', () => { store.lists.push(list); save(); refreshViews(); });
+  });
+  $('#btn-done').addEventListener('click', () => {
+    const list = current, was = !!list.done;
+    list.done = !was; save(); renderList();
+    toast(list.done ? 'List marked done' : 'List reopened', () => { list.done = was; save(); refreshViews(); });
+  });
   $('#list-items').addEventListener('click', async e => {
+    const pk = e.target.closest('[data-picked]');
+    if (pk) {
+      const c = customersOf(current)[+pk.dataset.picked];
+      const before = c.items.map(x => x.it.pickedUpAt);
+      const all = c.items.every(x => x.it.pickedUpAt), now = new Date().toISOString();
+      c.items.forEach(x => { x.it.pickedUpAt = all ? '' : (x.it.pickedUpAt || now); });
+      save(); renderList();
+      toast(all ? `${c.poc || 'Customer'} marked not picked up` : `${c.poc || 'Customer'} picked up`, () => {
+        c.items.forEach((x, k) => { x.it.pickedUpAt = before[k]; }); save(); refreshViews();
+      });
+      return;
+    }
     const sh = e.target.closest('[data-sheet]');
     if (sh) {
       if (sh.getAttribute('aria-busy') === 'true') return;
@@ -757,7 +1286,8 @@ button { cursor: pointer; }
     { h: 'WT (lb)', w: 9, weight: true, v: it => it.weight === '' || it.weight == null ? null : (parseFloat(it.weight) || 0) },
     { h: 'Location', w: 12, v: it => it.location || '' },
     { h: 'Carrier', w: 9, v: it => it.carrier || '' },
-    { h: 'In-Checker', w: 16, v: it => it.inChecker || '' }
+    { h: 'In-Checker', w: 16, v: it => it.inChecker || '' },
+    { h: 'Picked Up', w: 17, v: it => it.pickedUpAt ? csvDate(it.pickedUpAt) : '' }
   ];
   const cols = l => COLS[l.kind] || COLS.tally;
   const isMissing = v => typeof v === 'string' && /^NO (TCN|TRACKING|NSN)/.test(v);
@@ -885,14 +1415,49 @@ button { cursor: pointer; }
     return new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   }
 
+  // Code 128 module patterns for a set of values (true = bar), for drawing straight into a PDF.
+  async function barRows(values) {
+    const map = new Map(), ZW = await zxWriter();
+    for (const v of new Set(values.filter(Boolean))) {
+      try {
+        const out = await ZW.writeBarcode(v, { format: 'Code128', scale: 1, addQuietZones: false });
+        if (out.error || !out.symbol) continue;
+        const sym = out.symbol, row = [];
+        for (let x = 0; x < sym.width; x++) row.push(sym.data[x] < 128);
+        map.set(v, row);
+      } catch {}
+    }
+    return map;
+  }
+  // Solid black bars centered in a box, on white with a quiet zone either side.
+  function drawBars(doc, row, x, y, w, h) {
+    const QUIET = 10, mw = Math.min(1.6, w / (row.length + QUIET * 2));
+    const x0 = x + (w - row.length * mw) / 2;
+    doc.setFillColor(255, 255, 255);
+    doc.rect(x0 - QUIET * mw, y - 2, (row.length + QUIET * 2) * mw, h + 4, 'F');
+    doc.setFillColor(0, 0, 0);
+    for (let k = 0; k < row.length;) {
+      if (!row[k]) { k++; continue; }
+      let e = k; while (e < row.length && row[e]) e++;
+      doc.rect(x0 + k * mw, y, (e - k) * mw, h, 'F');
+      k = e;
+    }
+  }
+
   async function toPdf(l) {
     await loadScript('vendor/jspdf.umd.min.js');
     await loadScript('vendor/jspdf.plugin.autotable.min.js');
     const { jsPDF } = window.jspdf;
     if (!jsPDF.API.autoTable && window.applyPlugin) window.applyPlugin(jsPDF);
-    const doc = new jsPDF({ unit: 'pt', format: 'letter', orientation: cols(l).length > 6 ? 'landscape' : 'portrait' });
+    // Tally Sheets print a Code 128 barcode under each TCN and tracking # so a desk scanner can read them
+    // off the paper. Landscape gives the codes room for bars a scanner reads easily.
+    const withCodes = wantCodes(l);
+    const doc = new jsPDF({ unit: 'pt', format: 'letter', orientation: cols(l).length > 6 || withCodes ? 'landscape' : 'portrait' });
     const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 40;
     const title = listTitle(l), t = totals(l), cs = cols(l);
+    const bars = withCodes
+      ? await barRows(l.items.flatMap((it, i) => cs.filter(c => c.code).map(c => c.v(it, i))).filter(v => !isMissing(v)))
+      : new Map();
     const NAVY = [22, 32, 43], SLATE = [52, 70, 90], MUTED = [91, 104, 120], LINE = [201, 209, 218], LABEL = [233, 237, 241];
 
     // Title bar (name + list type) and amber rule
@@ -922,8 +1487,11 @@ button { cursor: pointer; }
     pair(RX, 92 + BH, 'Time', repTime(l.createdAt));
 
     const columnStyles = {};
+    // With barcodes, split the free width evenly between the code columns so each prints as wide as possible.
+    const fixedW = cs.reduce((a, c) => a + (c.pdf || 0), 0), codeW = (W - 2 * M - fixedW) / cs.filter(c => c.code).length;
     cs.forEach((c, i) => {
       columnStyles[i] = c.code ? { font: 'courier', fontStyle: 'bold' } : { halign: 'center' };
+      if (c.code && withCodes) Object.assign(columnStyles[i], { halign: 'center', valign: 'top', minCellHeight: 48, cellWidth: codeW });
       if (c.pdf) columnStyles[i].cellWidth = c.pdf;
     });
     doc.autoTable({
@@ -942,6 +1510,12 @@ button { cursor: pointer; }
         if (c.section === 'body' && isMissing(c.cell.raw)) {
           c.cell.styles.textColor = [184, 92, 0]; c.cell.styles.font = 'helvetica'; c.cell.styles.fontStyle = 'italic';
         }
+      },
+      // Draw the barcode under the printed value: solid black bars, centered, with a quiet zone each side.
+      didDrawCell: d => {
+        if (!withCodes || d.section !== 'body' || !cs[d.column.index]?.code) return;
+        const row = bars.get(d.cell.raw); if (!row) return;
+        drawBars(doc, row, d.cell.x + 4, d.cell.y + 20, d.cell.width - 8, d.cell.height - 26);
       }
     });
 
@@ -987,16 +1561,19 @@ button { cursor: pointer; }
     const doc = new jsPDF({ unit: 'pt', format: 'letter' });
     const custs = customersOf(l).filter(c => !onlyKey || c.key === onlyKey);
     const fields = [];
+    // With barcodes each row needs room for bars, so a sheet holds 8 rows instead of 12.
+    const bars = wantCodes(l) ? await barRows(custs.flatMap(c => c.items.flatMap(x => [x.it.tcn, x.it.tracking]))) : null;
+    const perSheet = bars ? 8 : SHEET_ROWS;
     let first = true;
     for (const c of custs) {
-      const sheets = Math.max(1, Math.ceil(c.items.length / SHEET_ROWS));
+      const sheets = Math.max(1, Math.ceil(c.items.length / perSheet));
       for (let s = 0; s < sheets; s++) {
         if (!first) doc.addPage();
         first = false;
-        drawTallySheet(doc, l, c, c.items.slice(s * SHEET_ROWS, (s + 1) * SHEET_ROWS).map(x => x.it), s + 1, sheets, fields);
+        drawTallySheet(doc, l, c, c.items.slice(s * perSheet, (s + 1) * perSheet).map(x => x.it), s + 1, sheets, fields, bars);
       }
     }
-    if (first) drawTallySheet(doc, l, { poc: '', unit: '' }, [], 1, 1, fields);
+    if (first) drawTallySheet(doc, l, { poc: '', unit: '' }, [], 1, 1, fields, bars);
     const pages = doc.getNumberOfPages();
     for (let p = 1; p <= pages; p++) {
       doc.setPage(p);
@@ -1046,7 +1623,8 @@ button { cursor: pointer; }
   }
 
   // One page of the CUSTOMER TALLY SHEET form, with the customer and up to 12 rows filled in.
-  function drawTallySheet(doc, l, c, rows, sheetNo, sheetCount, fields) {
+  function drawTallySheet(doc, l, c, rows, sheetNo, sheetCount, fields, bars) {
+    const N = bars ? 8 : SHEET_ROWS; // rows on this sheet; the table keeps the same overall height
     const X0 = 28, X1 = 584, W = X1 - X0;
     const thin = () => doc.setLineWidth(0.6), thick = () => doc.setLineWidth(2.2);
     const label = (t, x, y, size = 7.5) => { doc.setFont('helvetica', 'bold'); doc.setFontSize(size); doc.text(t, x, y); };
@@ -1076,21 +1654,28 @@ button { cursor: pointer; }
     const widths = [45, 169, 141, 24, 32, 51, 39, 55];
     const heads = ['ARR DATE', 'TCN', 'TRACKING #', 'PCS', 'WT', 'LOCATION', 'CARRIER', 'IN-CHECKER'];
     const xs = [X0]; widths.forEach(w => xs.push(xs[xs.length - 1] + w));
-    const HH = 14, RH = 24.5, tableBottom = y + HH + SHEET_ROWS * RH;
+    const HH = 14, RH = (SHEET_ROWS * 24.5) / N, tableBottom = y + HH + N * RH;
     thick(); hline(y);
     thin();
     xs.slice(1, -1).forEach(x => vline(x, y, tableBottom));
     hline(y + HH);
-    for (let r = 1; r < SHEET_ROWS; r++) hline(y + HH + r * RH);
+    for (let r = 1; r < N; r++) hline(y + HH + r * RH);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(7);
     heads.forEach((h, k) => doc.text(h, xs[k] + widths[k] / 2, y + 10, { align: 'center' }));
 
     const keys = ['arr', 'tcn', 'trk', 'pcs', 'wt', 'loc', 'carrier', 'checker'];
-    for (let r = 0; r < SHEET_ROWS; r++) {
-      const it = rows[r];
+    for (let r = 0; r < N; r++) {
+      const it = rows[r], top = y + HH + r * RH;
       const cells = it ? [it.arrDate, it.tcn || 'NO TCN', it.tracking || 'NO TRACKING', String(+it.pieces || 1), it.weight, it.location, it.carrier, it.inChecker || l.member] : [];
-      keys.forEach((k, ki) => field(`r${r + 1}_${k}`, xs[ki] + 1.5, y + HH + r * RH + 1.5, widths[ki] - 3, RH - 3, cells[ki] || '',
-        { size: ki === 1 || ki === 2 ? 9.5 : 9, align: ki === 1 || ki === 2 ? 'left' : 'center' }));
+      keys.forEach((k, ki) => {
+        const code = ki === 1 || ki === 2;
+        // With barcodes, the TCN / tracking text sits in the top of the cell and the bars fill the rest.
+        const fh = bars && code ? 14 : RH - 3;
+        field(`r${r + 1}_${k}`, xs[ki] + 1.5, top + 1.5, widths[ki] - 3, fh, cells[ki] || '',
+          { size: code ? 9.5 : 9, align: code && bars ? 'center' : code ? 'left' : 'center' });
+        const row = bars && code && it && bars.get(ki === 1 ? it.tcn : it.tracking);
+        if (row) drawBars(doc, row, xs[ki] + 2, top + 17, widths[ki] - 4, RH - 21);
+      });
     }
     y = tableBottom;
 
@@ -1144,8 +1729,10 @@ button { cursor: pointer; }
     label('DATE:', X0 + 358, y + 15, 7); label('TIME:', X0 + 480, y + 15, 7);
     field('rcv_unit', X0 + 26, y + 2, 178 - 30, 18, '', { size: 10 });
     field('rcv_phone', X0 + 200, y + 2, 354 - 204, 18, '', { size: 10 });
-    field('rcv_date', X0 + 382, y + 2, 476 - 386, 18, '', { size: 10 });
-    field('rcv_time', X0 + 504, y + 2, W - 506, 18, '', { size: 10 });
+    // If items on this sheet were marked picked up, prefill the latest pickup date and time.
+    const got = rows.map(it => it.pickedUpAt).filter(Boolean).sort().pop();
+    field('rcv_date', X0 + 382, y + 2, 476 - 386, 18, got ? repDate(got) : '', { size: 10 });
+    field('rcv_time', X0 + 504, y + 2, W - 506, 18, got ? repTime(got) : '', { size: 10 });
     y += 21;
 
     // Outer border
@@ -1157,7 +1744,31 @@ button { cursor: pointer; }
     label('PICKED UP BY GROUND TRANSPORTATION?', X0 + 24, y + 22, 7.5);
   }
 
+  // PDFs open in a preview first (unless turned off in Settings); other files download straight away.
   async function deliver(blob, name) {
+    if (blob.type === 'application/pdf' && store.previewPdf !== false) return previewPdf(blob, name);
+    // Phones: offer Share as well, since downloads are awkward in iPhone home-screen apps.
+    if (isTouchDevice() && canShareFile(blob, name)) return openFile(blob, name);
+    saveFile(blob, name);
+  }
+  let fileJob = null;
+  function openFile(blob, name) {
+    fileJob = { blob, name };
+    $('#file-name').textContent = name;
+    const kb = blob.size / 1024;
+    $('#file-size').textContent = `${kb < 1024 ? Math.max(1, Math.round(kb)) + ' KB' : (kb / 1024).toFixed(1) + ' MB'} · Share sends it by email, Teams or text; Download saves it.`;
+    $('#file-wrap').hidden = false;
+  }
+  function closeFile() { fileJob = null; $('#file-wrap').hidden = true; }
+  $('#file-cancel').addEventListener('click', closeFile);
+  $('#file-wrap').addEventListener('click', e => { if (e.target.id === 'file-wrap') closeFile(); });
+  $('#file-download').addEventListener('click', () => { const j = fileJob; closeFile(); if (j) saveFile(j.blob, j.name); });
+  $('#file-share').addEventListener('click', async () => {
+    const j = fileJob; if (!j) return;
+    try { await navigator.share({ files: [fileOf(j.blob, j.name)], title: j.name }); closeFile(); toast(`Shared ${j.name}`); }
+    catch (err) { if (err.name !== 'AbortError') toast("The share menu didn't open. Tap Download instead."); }
+  });
+  function saveFile(blob, name) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = name; a.rel = 'noopener';
@@ -1166,6 +1777,63 @@ button { cursor: pointer; }
     toast(`Downloaded ${name}`);
   }
 
+  // ---------- PDF preview: draw every page with pdf.js, then Download or Cancel ----------
+  let previewJob = null;
+  async function previewPdf(blob, name) {
+    const pages = $('#pdf-pages'), status = $('#pdf-status');
+    const job = previewJob = { blob, name };
+    $('#pdf-name').textContent = name;
+    pages.innerHTML = ''; status.textContent = 'Opening preview…';
+    $('#pdf-share').hidden = !canShareFile(blob, name);
+    $('#pdf-wrap').hidden = false; document.body.style.overflow = 'hidden';
+    $('#pdf-download').focus();
+    try {
+      const lib = await loadPdfjs();
+      const pdf = await lib.getDocument({ data: new Uint8Array(await blob.arrayBuffer()), isEvalSupported: false }).promise;
+      const n = pdf.numPages;
+      for (let p = 1; p <= n && job === previewJob; p++) {
+        status.textContent = `Drawing page ${p} of ${n}…`;
+        const page = await pdf.getPage(p);
+        const cssW = Math.min(pages.clientWidth - 32 || 360, 900);
+        const scale = (cssW * Math.min(window.devicePixelRatio || 1, 2.5)) / page.getViewport({ scale: 1 }).width;
+        const vp = page.getViewport({ scale });
+        const c = document.createElement('canvas');
+        c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+        c.className = 'pdf-page'; c.setAttribute('role', 'img'); c.setAttribute('aria-label', `Page ${p} of ${n}`);
+        pages.appendChild(c);
+        // ENABLE draws form fields' filled-in values onto the page (fillable tally sheets).
+        await page.render({ canvasContext: c.getContext('2d'), viewport: vp, annotationMode: lib.AnnotationMode.ENABLE }).promise;
+        page.cleanup();
+      }
+      if (job === previewJob) status.textContent = `${n} page${n === 1 ? '' : 's'}. Pinch to zoom. ${$('#pdf-share').hidden ? 'Tap Download to save it.' : 'Share sends it by email, Teams or text; Download saves it.'}`;
+      pdf.destroy();
+    } catch {
+      if (job === previewJob) status.textContent = "The preview couldn't be shown on this device, but Download still works.";
+    }
+  }
+  // Share: hands the PDF to the device's share menu (Mail, Outlook, Gmail, Teams, Messages, Files, AirDrop…).
+  const fileOf = (blob, name) => new File([blob], name, { type: blob.type || 'application/pdf' });
+  const canShareFile = (blob, name) => { try { return !!navigator.canShare?.({ files: [fileOf(blob, name)] }); } catch { return false; } };
+  $('#pdf-share').addEventListener('click', async () => {
+    const job = previewJob; if (!job) return;
+    try {
+      await navigator.share({ files: [fileOf(job.blob, job.name)], title: job.name });
+      toast(`Shared ${job.name}`);
+    } catch (err) {
+      if (err.name !== 'AbortError') toast("The share menu didn't open. Tap Download instead.");
+    }
+  });
+
+  function closePreview() {
+    previewJob = null;
+    $('#pdf-wrap').hidden = true; $('#pdf-pages').innerHTML = ''; document.body.style.overflow = '';
+  }
+  $('#pdf-cancel').addEventListener('click', closePreview);
+  $('#pdf-download').addEventListener('click', () => {
+    const job = previewJob; if (!job) return;
+    closePreview(); saveFile(job.blob, job.name);
+  });
+
   const closeExport = () => { $('#export-wrap').hidden = true; };
   $('#btn-export').addEventListener('click', () => {
     const t = totals(current);
@@ -1173,9 +1841,14 @@ button { cursor: pointer; }
     const pu = isPickup(current);
     $('#pdf-opt-title').textContent = pu ? 'PDF Binder' : 'PDF';
     $('#pdf-opt-sub').textContent = pu ? 'Every customer\'s tally sheet, filled in and ready to print' : 'Printable report with header and totals';
+    $('#export-codes').checked = wantCodes(current);
+    $('#export-codes-label').textContent = `Print barcodes for ${isWeekly(current) ? 'TCN, tracking # and NSN' : 'TCN and tracking #'} on the PDF`;
     $('#export-wrap').hidden = false;
   });
   $('#export-cancel').addEventListener('click', closeExport);
+  $('#export-codes').addEventListener('change', e => {
+    store.barcodes = { ...(store.barcodes || {}), [current.kind]: e.target.checked }; save();
+  });
   $('#export-wrap').addEventListener('click', e => { if (e.target.id === 'export-wrap') closeExport(); });
   $('#export-wrap').addEventListener('click', async e => {
     const b = e.target.closest('.export-opt'); if (!b || b.getAttribute('aria-busy') === 'true') return;
@@ -1207,6 +1880,7 @@ button { cursor: pointer; }
     $('#e-poc').value = it.poc || ''; $('#e-unit').value = it.unit || '';
     $('#e-phone').value = it.phone || ''; $('#e-email').value = it.email || '';
     $('#e-carrier').value = it.carrier || ''; $('#e-arr').value = it.arrDate || '';
+    $('#e-picked').checked = !!it.pickedUpAt;
     document.querySelectorAll('#edit-form [data-kinds]').forEach(el => {
       el.hidden = !el.dataset.kinds.split(' ').includes(current.kind);
     });
@@ -1214,12 +1888,13 @@ button { cursor: pointer; }
     $('#edit-wrap').hidden = false;
   }
   const closeEdit = () => {
+    closeQuickScan();
     $('#edit-wrap').hidden = true; editIdx = -1;
     if (!$('#s-scan').hidden && SCAN[step]) startCamera();
   };
   // After an edit or delete, redraw the list and, if scanning, the recent items and item count.
-  const afterEdit = msg => {
-    save(); closeEdit(); renderList(); toast(msg);
+  const afterEdit = (msg, undo) => {
+    save(); closeEdit(); renderList(); toast(msg, undo);
     if (!$('#s-scan').hidden && SCAN[step]) {
       renderRecent();
       $('#scan-title').textContent = `${tagOf(current)} · Item ${current.items.length + 1}`;
@@ -1242,6 +1917,7 @@ button { cursor: pointer; }
       it.location = $('#e-loc').value.trim().toUpperCase();
       it.carrier = $('#e-carrier').value.trim().toUpperCase();
       it.arrDate = $('#e-arr').value.trim().toUpperCase();
+      it.pickedUpAt = $('#e-picked').checked ? (it.pickedUpAt || new Date().toISOString()) : '';
     } else if (isWeekly(current)) {
       it.pkgType = $('#e-pkg').value.trim() || 'Box';
       it.nsn = cleanNsn($('#e-nsn').value);
@@ -1253,9 +1929,11 @@ button { cursor: pointer; }
     }
     afterEdit('Item updated');
   });
-  $('#e-del').addEventListener('click', e => confirmTap(e.currentTarget, 'Tap again to delete', () => {
-    current.items.splice(editIdx, 1); afterEdit('Item deleted');
-  }));
+  $('#e-del').addEventListener('click', () => {
+    const list = current, idx = editIdx, item = list.items[idx];
+    list.items.splice(idx, 1);
+    afterEdit('Item deleted', () => { list.items.splice(Math.min(idx, list.items.length), 0, item); save(); refreshViews(); });
+  });
 
   // ---------- scanning flow ----------
   const SCAN = {
@@ -1278,7 +1956,48 @@ button { cursor: pointer; }
     setStep(isPickup(current) && !current.curCust ? 'cust' : 'tcn');
     requestWake();
   }
-  $('#scan-done').addEventListener('click', () => { renderList(); show('s-list'); });
+  $('#scan-done').addEventListener('click', () => {
+    if (step === 'find') { renderHome(); show('s-home'); } else { renderList(); show('s-list'); }
+  });
+
+  // ---------- find a package (searches every list on this device) ----------
+  SCAN.find = { label: 'Find', name: 'TCN or tracking number', prompt: 'Scan a TCN or tracking #', none: '', ph: 'TCN or tracking number', clean: cleanTcn, hint: '' };
+  function startFind() {
+    draft = newDraft();
+    $('#find-results').innerHTML = '';
+    show('s-scan');
+    setStep('find');
+    requestWake();
+  }
+  function findPackages(raw) {
+    const q = cleanTcn(raw), qt = cleanTracking(raw), hits = [];
+    store.lists.forEach(l => l.items.forEach((it, i) => {
+      const t = it.tcn || '', k = it.tracking || '';
+      const exact = (t && t === q) || (k && (k === q || k === qt));
+      const partial = q.length >= 5 && (t.includes(q) || k.includes(q));
+      if (exact || partial) hits.push({ l, it, i, exact });
+    }));
+    return hits.sort((a, b) => (b.exact - a.exact) || b.l.createdAt.localeCompare(a.l.createdAt));
+  }
+  let findHits = [];
+  function showFind(raw) {
+    findHits = findPackages(raw);
+    const q = esc(cleanTcn(raw));
+    $('#find-results').innerHTML = findHits.length
+      ? `<span class="label">${findHits.length} match${findHits.length === 1 ? '' : 'es'} for ${q} · tap to open</span><div class="items">` +
+        findHits.map(({ l, it, i }, k) => `<button class="hit" type="button" data-hit="${k}">
+          <b>${esc(listTitle(l))} · item ${i + 1}${l.done ? ' <span class="done-tag">Done</span>' : ''}</b>
+          <small>${KINDS[l.kind]}${it.poc ? ' · ' + esc(it.poc) + (it.unit ? ' (' + esc(it.unit) + ')' : '') : ''}${it.location ? ' · Location ' + esc(it.location) : ''}</small>
+          <span class="code">${esc(it.tcn || 'No TCN')} · ${esc(it.tracking || 'No tracking #')}</span>
+          ${it.pickedUpAt ? `<small class="picked">Picked up ${esc(fmtDate(it.pickedUpAt))}</small>` : ''}
+        </button>`).join('') + '</div>'
+      : `<div class="warnbox">No package matches ${q} on this device.</div>`;
+  }
+  $('#find-results').addEventListener('click', e => {
+    const b = e.target.closest('[data-hit]'); if (!b) return;
+    const h = findHits[+b.dataset.hit];
+    openList(h.l); openEdit(h.i);
+  });
 
   // Captured-code rows with a redo button, e.g. "TCN  FB55...  [Rescan]".
   const capturedHtml = (keys, btn) => keys.map(k => {
@@ -1290,6 +2009,21 @@ button { cursor: pointer; }
 
   function setStep(s) {
     step = s; stepAt = Date.now();
+    $('#mode-toggle').textContent = typing() ? 'Use camera' : 'Type';
+    if (s === 'find') {
+      $('#steps').hidden = true; $('#cust-bar').hidden = true; $('#p-cust').hidden = true; $('#p-det').hidden = true;
+      $('#p-scan').hidden = false; $('#cam').hidden = typing();
+      $('#type-form').hidden = !typing(); $('#btn-type').hidden = typing(); $('#btn-none').hidden = true;
+      $('#pick').hidden = true; $('#recent').hidden = true; $('#find-results').hidden = false;
+      $('#cap-mini').innerHTML = '';
+      $('#scan-title').textContent = 'Find a package';
+      $('#scan-prompt').textContent = typing() ? 'Enter a TCN or tracking #' : 'Scan a TCN or tracking #';
+      $('#scan-hint').textContent = 'Searches every list on this device and shows the list, customer, and location.';
+      $('#type-input').placeholder = SCAN.find.ph;
+      if (typing()) { $('#type-input').value = ''; $('#type-input').focus(); } else startCamera();
+      return;
+    }
+    $('#btn-none').hidden = false; $('#recent').hidden = false; $('#find-results').hidden = true;
     const pu = isPickup(current);
     $('#p-cust').hidden = s !== 'cust';
     $('#steps').hidden = s === 'cust';
@@ -1311,22 +2045,31 @@ button { cursor: pointer; }
     const scanning = !!SCAN[s];
     $('#p-scan').hidden = !scanning;
     $('#p-det').hidden = scanning;
-    $('#cam').hidden = !scanning;
-    $('#type-form').hidden = true;
+    $('#cam').hidden = !scanning || typing();
+    $('#type-form').hidden = !(scanning && typing());
+    $('#btn-type').hidden = typing();
     $('#pick').hidden = true;
     $('#scan-body').scrollTop = 0;
     if (scanning) {
       const c = SCAN[s];
-      $('#scan-prompt').textContent = c.prompt;
-      $('#scan-hint').textContent = c.hint;
+      $('#scan-prompt').textContent = typing() ? c.prompt.replace('Scan', 'Enter') : c.prompt;
+      $('#scan-hint').textContent = typing()
+        ? `Type the ${c.name} and press Enter. A USB barcode scanner also works here.`
+        : c.hint;
       $('#btn-none').textContent = c.none;
       $('#type-input').placeholder = c.ph;
       $('#cap-mini').innerHTML = draft.back ? '' : capturedHtml(order.slice(0, cur), 'Redo');
       renderRecent();
-      startCamera();
+      if (typing()) { $('#type-input').value = ''; $('#type-input').focus(); }
+      else startCamera();
     } else {
       pauseCamera();
       renderDetails();
+      // Keyboard flow: jump to the first field that usually needs typing; Enter saves.
+      if (typing()) {
+        const first = ['#weight', '#location'].map(q => $(q)).find(el => el && !el.closest('[hidden]'));
+        first?.focus();
+      }
     }
   }
 
@@ -1343,6 +2086,13 @@ button { cursor: pointer; }
 
   function accept(value, fromCamera) {
     if (!SCAN[step]) return;
+    if (step === 'find') {
+      if (!value) return;
+      if (fromCamera) beep();
+      showFind(value);
+      if (typing()) { $('#type-input').value = ''; $('#type-input').focus(); }
+      return;
+    }
     draft[step] = value ? SCAN[step].clean(value) : '';
     if (fromCamera) beep();
     const order = flow();
@@ -1372,6 +2122,13 @@ button { cursor: pointer; }
     const v = $('#type-input').value.trim(); if (!v) return;
     $('#type-input').blur(); accept(v, false);
   });
+  $('#mode-toggle').addEventListener('click', () => {
+    inputMode = typing() ? 'scan' : 'type';
+    store.inputMode = inputMode; save();
+    if (typing()) stopCamera();
+    setStep(step);
+    toast(typing() ? 'Keyboard entry on' : 'Camera scanning on');
+  });
   $('#cap-mini').addEventListener('click', e => {
     const b = e.target.closest('[data-redo]'); if (b) setStep(b.dataset.redo);
   });
@@ -1389,6 +2146,14 @@ button { cursor: pointer; }
       if (draft.tcn && it.tcn === draft.tcn) notes.push(`TCN already on item ${i + 1}.`);
       if (draft.trk && it.tracking === draft.trk) notes.push(`Tracking number already on item ${i + 1}.`);
     });
+    // Same code on another list on this device (e.g. freight received twice).
+    for (const l of store.lists) {
+      if (l === current || notes.length > 4) continue;
+      l.items.forEach((it, i) => {
+        if (draft.tcn && it.tcn === draft.tcn) notes.push(`TCN is also on ${listTitle(l)} (${KINDS[l.kind]}), item ${i + 1}.`);
+        else if (draft.trk && it.tracking === draft.trk) notes.push(`Tracking number is also on ${listTitle(l)} (${KINDS[l.kind]}), item ${i + 1}.`);
+      });
+    }
     if (draft.tcn && draft.tcn.length !== 17) notes.push(`TCN is ${draft.tcn.length} characters; most TCNs are 17. Check the scan.`);
     const nsnLen = draft.nsn.replace(/-/g, '').length;
     if (tally && draft.nsn && nsnLen !== 13) notes.push(`NSN is ${nsnLen} characters; NSNs are 13. Check the scan.`);
@@ -1403,6 +2168,7 @@ button { cursor: pointer; }
     renderPkgChips();
     renderCiicChips();
     renderCarrierChips();
+    renderLocChips();
     $('#pieces').value = draft.pieces;
     $('#weight').value = draft.weight;
     $('#location').value = draft.location;
@@ -1441,14 +2207,23 @@ button { cursor: pointer; }
     if (v === 'Other') $('#ciic-other').focus();
   });
   $('#ciic-other').addEventListener('input', e => { draft.ciic = e.target.value.trim().toUpperCase() || 'OTHER'; });
-  $('#location').addEventListener('input', e => { draft.location = e.target.value; });
+  $('#location').addEventListener('input', e => { draft.location = e.target.value; renderLocChips(); });
+  function renderLocChips() {
+    const cur = ($('#location').value || '').trim().toUpperCase();
+    $('#loc-chips').innerHTML = store.recentLocations.map(v =>
+      `<button type="button" class="chip scac" data-v="${esc(v)}" aria-pressed="${cur === v}">${esc(v)}</button>`).join('');
+  }
+  $('#loc-chips').addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    $('#location').value = draft.location = b.dataset.v; renderLocChips();
+  });
 
   // Carrier (pickup): common SCACs, or Other to type one. Remembers the last carrier.
   function renderCarrierChips() {
     const isOther = draft.carrier === 'OTHER' || (draft.carrier && !COMMON_SCACS.includes(draft.carrier));
     $('#carrier-chips').innerHTML = [...COMMON_SCACS, 'Other'].map(c => {
       const on = c === 'Other' ? isOther : draft.carrier === c;
-      return `<button type="button" class="chip scac" data-v="${c}" aria-pressed="${on}">${c}</button>`;
+      return `<button type="button" class="chip scac" data-v="${c}" aria-pressed="${on}">${scacLabel(c)}</button>`;
     }).join('');
     $('#carrier-other').hidden = !isOther;
     if (isOther) $('#carrier-other').value = draft.carrier === 'OTHER' ? '' : draft.carrier;
@@ -1517,19 +2292,23 @@ button { cursor: pointer; }
         carrier: draft.carrier === 'OTHER' ? '' : draft.carrier,
         inChecker: current.member
       });
-      store.lastLocation = item.location;
+      store.lastLocation = item.location; rememberLocation(item.location);
       store.lastCarrier = item.carrier;
     } else if (isWeekly(current)) {
       item.nsn = draft.nsn;
       item.ciic = draft.ciic === 'OTHER' ? '' : draft.ciic;
       item.location = $('#location').value.trim().toUpperCase();
-      store.lastLocation = item.location;
+      store.lastLocation = item.location; rememberLocation(item.location);
     } else {
       item.weight = $('#weight').value.replace(/[^0-9.]/g, '');
     }
     current.items.push(item);
     store.lastPkg = pkgType; save();
-    toast(isPickup(current) ? `Item saved to ${current.curCust.poc}'s sheet` : `Item ${current.items.length} saved`);
+    const list = current;
+    toast(isPickup(list) ? `Item saved to ${list.curCust.poc}'s sheet` : `Item ${list.items.length} saved`, () => {
+      const k = list.items.indexOf(item); if (k >= 0) list.items.splice(k, 1);
+      save(); refreshViews();
+    });
     draft = newDraft();
     setStep('tcn');
   });
@@ -1564,10 +2343,10 @@ button { cursor: pointer; }
   let torchOn = false, zoomSteps = [], zoomIdx = 0;
   const camMsg = m => { const el = $('#cam-msg'); el.hidden = !m; el.textContent = m || ''; };
 
-  function pickBest(results, w, h) {
+  function pickBest(results, w, h, look = step) {
     const valid = results.filter(r => r.isValid && r.text);
     if (!valid.length) return null;
-    const fits = valid.filter(r => LOOKS[step]?.(r.text));
+    const fits = valid.filter(r => LOOKS[look]?.(r.text));
     const pool = fits.length ? fits : valid;
     const dist = r => {
       const p = r.position;
@@ -1612,6 +2391,7 @@ button { cursor: pointer; }
   }
 
   async function startCamera() {
+    if (typing()) return;
     if (camState === 'running' || camState === 'starting') return;
     if (camState === 'paused' && track && track.readyState === 'live') {
       camState = 'running'; video.play().catch(() => {}); scanLoop(); return;
@@ -1704,6 +2484,91 @@ button { cursor: pointer; }
     if (!$('#s-scan').hidden && SCAN[step] && (!track || track.readyState !== 'live')) { stopCamera(); startCamera(); }
   });
 
+  // ---------- quick scan: fill one field from the camera (Edit Item) ----------
+  const QS_CLEAN = { tcn: cleanTcn, trk: cleanTracking, nsn: cleanNsn };
+  let qs = null;
+  async function quickScan(input, look, label) {
+    if (!ZX) { toast('The scanner did not load. Type the number instead.'); return; }
+    stopCamera(); // phones allow one camera stream at a time
+    const job = qs = { input, look, label, stream: null, track: null, pending: '', torch: false };
+    $('#qs-title').textContent = `Scan ${label}`;
+    $('#qs-msg').hidden = false; $('#qs-msg').textContent = 'Starting camera…';
+    $('#qs-torch').hidden = true; $('#qs-torch').setAttribute('aria-pressed', 'false');
+    $('#qs-wrap').hidden = false;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+      });
+      if (qs !== job) { stream.getTracks().forEach(t => t.stop()); return; }
+      job.stream = stream; job.track = stream.getVideoTracks()[0];
+      try { await job.track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }); } catch {}
+      const v = $('#qs-video'); v.srcObject = stream; await v.play();
+      $('#qs-msg').hidden = true;
+      let caps = {}; try { caps = job.track.getCapabilities?.() || {}; } catch {}
+      $('#qs-torch').hidden = !caps.torch;
+      qsLoop(job);
+    } catch {
+      if (qs === job) $('#qs-msg').textContent = 'Camera unavailable. Use Photo, or type the number.';
+    }
+  }
+  async function qsLoop(job) {
+    const v = $('#qs-video'), c = document.createElement('canvas'), x = c.getContext('2d', { willReadFrequently: true });
+    while (qs === job) {
+      if (v.readyState >= 2 && v.videoWidth) {
+        const k = Math.min(1, 1600 / Math.max(v.videoWidth, v.videoHeight));
+        c.width = Math.round(v.videoWidth * k); c.height = Math.round(v.videoHeight * k);
+        x.drawImage(v, 0, 0, c.width, c.height);
+        try {
+          const best = pickBest(await ZX.readBarcodes(x.getImageData(0, 0, c.width, c.height), READER), c.width, c.height, job.look);
+          if (qs !== job) return;
+          if (!best) job.pending = '';
+          else if (NO_CHECKSUM.test(best.format) && job.pending !== best.text) job.pending = best.text; // confirm on a second read
+          else { qsFill(best.text); return; }
+        } catch {}
+      }
+      await new Promise(r => setTimeout(r, 40));
+    }
+  }
+  function qsFill(text) {
+    const job = qs; if (!job) return;
+    job.input.value = (QS_CLEAN[job.look] || (t => t.trim().toUpperCase()))(text);
+    job.input.dispatchEvent(new Event('input', { bubbles: true }));
+    beep();
+    closeQuickScan();
+    toast(`${job.label[0].toUpperCase() + job.label.slice(1)} filled in. Check it, then Save Changes.`);
+  }
+  function closeQuickScan() {
+    if (!qs) return;
+    try { qs.stream?.getTracks().forEach(t => t.stop()); } catch {}
+    qs = null;
+    $('#qs-video').srcObject = null;
+    $('#qs-wrap').hidden = true;
+  }
+  $('#edit-form').addEventListener('click', e => {
+    const b = e.target.closest('[data-scan]'); if (!b) return;
+    quickScan($('#' + b.dataset.scan), b.dataset.look, b.dataset.label);
+  });
+  $('#qs-cancel').addEventListener('click', closeQuickScan);
+  $('#qs-wrap').addEventListener('click', e => { if (e.target.id === 'qs-wrap') closeQuickScan(); });
+  $('#qs-torch').addEventListener('click', async () => {
+    if (!qs?.track) return;
+    qs.torch = !qs.torch;
+    try { await qs.track.applyConstraints({ advanced: [{ torch: qs.torch }] }); } catch { qs.torch = false; }
+    $('#qs-torch').setAttribute('aria-pressed', qs.torch);
+  });
+  $('#qs-photo').addEventListener('click', () => { $('#qs-photo-input').value = ''; $('#qs-photo-input').click(); });
+  $('#qs-photo-input').addEventListener('change', async e => {
+    const file = e.target.files && e.target.files[0], job = qs;
+    if (!file || !job) return;
+    try {
+      const res = (await ZX.readBarcodes(file, { ...READER, tryInvert: true, maxNumberOfSymbols: 16 })).filter(r => r.isValid && r.text);
+      const fits = res.filter(r => LOOKS[job.look]?.(r.text));
+      const pick = (fits.length ? fits : res)[0];
+      if (pick) qsFill(pick.text);
+      else { beep(false); toast('No barcode found in that photo. Move closer and keep it sharp.'); }
+    } catch { toast('Could not read that photo.'); }
+  });
+
   // keep the screen on while scanning
   let wake = null;
   async function requestWake() { try { wake = await navigator.wakeLock?.request('screen'); } catch {} }
@@ -1712,8 +2577,646 @@ button { cursor: pointer; }
     if (document.visibilityState === 'visible' && !$('#s-scan').hidden) { requestWake(); if (SCAN[step]) startCamera(); }
   });
 
+  // ---------- settings ----------
+  const MODES = [['auto', 'Auto'], ['scan', 'Camera'], ['type', 'Keyboard']];
+  let installEvt = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; if (!$('#s-settings').hidden) renderSettings(); });
+  window.addEventListener('appinstalled', () => { installEvt = null; toast('Installed. Open it from your home screen or apps.'); });
+  $('#btn-install').addEventListener('click', async () => {
+    if (!installEvt) return;
+    installEvt.prompt();
+    try { await installEvt.userChoice; } catch {}
+    installEvt = null; renderSettings();
+  });
+  function renderSettings() {
+    $('#btn-install').hidden = !installEvt || isStandalone();
+    $('#install-info').textContent = isStandalone() ? 'Installed: you are using the app version.'
+      : installEvt ? 'Install it to open from your home screen or desktop, full screen, and offline.'
+      : isIOS ? 'On iPhone or iPad: in Safari tap Share, then Add to Home Screen. This also keeps Safari from clearing your lists.'
+      : /Android/i.test(navigator.userAgent) ? "In Chrome's menu (⋮), tap Install app or Add to Home screen."
+      : "In Chrome or Edge, use the install icon in the address bar, or the browser menu's Install option.";
+    $('#set-name').value = store.userName || '';
+    $('#set-beta-cmos').checked = !!store.betaCmos;
+    $('#set-preview').checked = store.previewPdf !== false;
+    const m = store.inputMode || 'auto';
+    $('#mode-chips').innerHTML = MODES.map(([v, label]) =>
+      `<button type="button" class="chip" data-v="${v}" aria-pressed="${m === v}">${label}</button>`).join('');
+    $('#mode-hint').textContent = m === 'auto'
+      ? `Auto: camera on phones and tablets, keyboard on computers. This device uses ${isTouchDevice() ? 'the camera' : 'the keyboard'}.`
+      : m === 'scan' ? 'Always start with the camera.' : 'Always start with typing. USB barcode scanners work here too.';
+    const n = store.lists.length;
+    $('#backup-info').textContent = `${n} list${n === 1 ? '' : 's'} on this device. Last backup: ${store.lastBackup ? fmtDate(store.lastBackup) : 'never'}.`;
+  }
+  $('#settings-back').addEventListener('click', () => { renderHome(); show('s-home'); });
+  $('#set-preview').addEventListener('change', e => { store.previewPdf = e.target.checked; save(); });
+  $('#set-beta-cmos').addEventListener('change', e => {
+    store.betaCmos = e.target.checked; save();
+    toast(store.betaCmos ? 'CMOS keying turned on. Open a Tally Sheet to use it.' : 'CMOS keying turned off');
+  });
+  $('#name-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = $('#set-name').value.trim(); if (!v) return;
+    store.userName = v; save(); $('#set-name').blur(); toast('Name saved');
+  });
+  $('#mode-chips').addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    store.inputMode = b.dataset.v === 'auto' ? null : b.dataset.v;
+    inputMode = store.inputMode || (isTouchDevice() ? 'scan' : 'type');
+    save(); renderSettings();
+  });
+  function backupAll() {
+    const d = new Date();
+    const data = { app: 'inventory-scan', version: 1, exportedAt: d.toISOString(), lists: store.lists,
+      settings: { userName: store.userName, recentLocations: store.recentLocations, lastCarrier: store.lastCarrier, lastPkg: store.lastPkg } };
+    deliver(new Blob([JSON.stringify(data)], { type: 'application/json' }),
+      `inventory-backup-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}.json`);
+    store.lastBackup = d.toISOString(); save();
+    renderSettings(); if (!$('#s-home').hidden) renderHome();
+  }
+  $('#btn-backup').addEventListener('click', backupAll);
+  $('#btn-restore').addEventListener('click', () => { $('#restore-input').value = ''; $('#restore-input').click(); });
+  // Restore merges: new lists are added; a list already here is replaced only if the backup has more items.
+  $('#restore-input').addEventListener('change', async e => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    try {
+      const data = JSON.parse(await f.text());
+      if (!data || !Array.isArray(data.lists)) throw new Error('not a backup');
+      let added = 0, updated = 0;
+      for (const l of data.lists) {
+        if (!l || !l.id || !Array.isArray(l.items)) continue;
+        if (!l.kind) l.kind = 'tally';
+        const k = store.lists.findIndex(x => x.id === l.id);
+        if (k < 0) { store.lists.push(l); added++; }
+        else if (l.items.length > store.lists[k].items.length) { store.lists[k] = l; updated++; }
+      }
+      if (!store.userName && data.settings?.userName) store.userName = data.settings.userName;
+      save(); renderSettings();
+      toast(added || updated ? `Restored ${added} new list${added === 1 ? '' : 's'}${updated ? `, updated ${updated}` : ''}` : 'Everything in that backup is already here');
+    } catch {
+      toast('That file is not an Inventory Scan backup.');
+    }
+  });
+
+  // ---------- import document: read PDFs, photos and spreadsheets, find TCNs and manifest numbers ----------
+  const IMP_TYPES = { tcn: 'TCN', manifest: 'Manifest / BOL', tracking: 'Tracking #', other: 'Other' };
+  let impCands = [], impSeq = 0, impBusy = false;
+  // What a value looks like: carrier tracking numbers, 17-character TCNs, CMOS-style movement documents.
+  function classify(v) {
+    if (/^1Z[0-9A-Z]{16}$/.test(v) || /^(\d{12}|\d{15}|\d{20}|\d{22})$/.test(v) || /^9\d{21,25}$/.test(v)) return 'tracking';
+    if (/^[A-Z0-9]{17}$/.test(v) && /[A-Z]/.test(v) && (v.match(/\d/g) || []).length >= 5) return 'tcn';
+    if (/^[A-Z]{3,4}\d[A-Z0-9]\d{4,10}$/.test(v)) return 'manifest';
+    return null;
+  }
+  // OCR often swaps O/0, I/1, S/5, B/8, Z/2. Fix letters sitting between digits; report whether anything changed.
+  function ocrFix(v) {
+    const map = { O: '0', Q: '0', D: '0', I: '1', L: '1', S: '5', B: '8', Z: '2' };
+    let out = '';
+    for (let i = 0; i < v.length; i++) {
+      const c = v[i], prev = v[i - 1] || '', next = v[i + 1] || '';
+      out += map[c] && /\d/.test(prev) && /\d/.test(next) ? map[c] : c;
+    }
+    return out;
+  }
+  function addCand(value, type, src) {
+    value = value.toUpperCase().replace(/[^0-9A-Z]/g, '');
+    if (value.length < 6) return;
+    let fixed = false;
+    if (src.kind === 'OCR') { const f = ocrFix(value); fixed = f !== value; value = f; }
+    type = type || classify(value);
+    if (!type) return;
+    let c = impCands.find(x => x.value === value);
+    if (!c) { c = { id: ++impSeq, value, type, on: type !== 'other', sources: new Set(), where: new Set(), check: false }; impCands.push(c); }
+    c.sources.add(src.kind);
+    c.where.add(src.page ? `${src.file} p${src.page}` : src.file);
+    // Exact sources (PDF text, barcodes, files) clear an OCR doubt; OCR alone stays flagged.
+    c.check = [...c.sources].every(k => k === 'OCR');
+    c.fixed = c.fixed || fixed;
+  }
+  function extractText(text, src) {
+    const T = String(text || '').toUpperCase();
+    // Labelled numbers: "BOL: 12345", "MANIFEST NO. VSEA001248510", "TCN FB55...".
+    const labelled = /\b(BILL OF LADING|B\/L|BOL|GBL|MANIFEST|MOVEMENT DOC(?:UMENT)?|PRO)\b\s*(?:NO\.?|NBR|NUMBER|#)?\s*[:#.\-]?\s*([A-Z0-9][A-Z0-9-]{5,24})/g;
+    for (const m of T.matchAll(labelled)) if (/\d/.test(m[2])) addCand(m[2], 'manifest', src);
+    for (const m of T.matchAll(/\bTCN\s*(?:NO\.?|#)?\s*[:#]?\s*([A-Z0-9]{17})\b/g)) addCand(m[1], 'tcn', src);
+    // Tracking numbers printed in spaced groups: "7712 3456 7800", "1Z 999 AA1 01 2345 6784".
+    for (const m of T.matchAll(/\b1Z(?:\s?[0-9A-Z]){16}\b/g)) addCand(m[0], 'tracking', src);
+    for (const m of T.matchAll(/\b\d{4}(?: \d{4}){2,5}(?: \d{1,4})?\b/g)) { const v = m[0].replace(/ /g, ''); if (classify(v) === 'tracking') addCand(v, 'tracking', src); }
+    // Everything else: single tokens that look like a known code.
+    for (const tok of T.split(/[^0-9A-Z]+/)) if (tok.length >= 8 && tok.length <= 30) addCand(tok, null, src);
+  }
+  async function readBarcodesFrom(source, src) {
+    if (!ZX) return;
+    try {
+      const res = await ZX.readBarcodes(source, { ...READER, tryInvert: true, maxNumberOfSymbols: 32 });
+      for (const r of res) {
+        if (!r.isValid || !r.text) continue;
+        const v = r.text.toUpperCase().replace(/[^0-9A-Z]/g, '');
+        if (classify(v)) addCand(v, null, { ...src, kind: 'Barcode' });
+        else if (/^1Z/.test(v) || r.text.length > 30) extractText(r.text.replace(/[\x1d\x1e\x04]/g, ' '), { ...src, kind: 'Barcode' });
+        else if (v.length >= 8) addCand(v, 'other', { ...src, kind: 'Barcode' });
+      }
+    } catch {}
+  }
+
+  let pdfjs = null, ocrWorker = null, ocrProgress = null;
+  async function loadPdfjs() {
+    if (pdfjs) return pdfjs;
+    pdfjs = await import(new URL('vendor/pdfjs/pdf.min.mjs', location.href).href);
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL('vendor/pdfjs/pdf.worker.min.mjs', location.href).href;
+    return pdfjs;
+  }
+  async function getOcr() {
+    if (ocrWorker) return ocrWorker;
+    impStatus('Loading text recognition (first time only, about 7 MB)…');
+    await loadScript('vendor/tesseract/tesseract.min.js');
+    const base = new URL('vendor/tesseract/', location.href).href;
+    ocrWorker = await window.Tesseract.createWorker('eng', 1, {
+      workerPath: base + 'worker.min.js', corePath: base + 'core', langPath: base + 'lang',
+      logger: m => { if (m.status === 'recognizing text') ocrProgress?.(m.progress); }
+    });
+    return ocrWorker;
+  }
+  async function ocr(canvas, label, src) {
+    const w = await getOcr();
+    ocrProgress = p => impStatus(`${label} · reading text ${Math.round(p * 100)}%`);
+    const { data } = await w.recognize(canvas);
+    ocrProgress = null;
+    extractText(data.text, { ...src, kind: 'OCR' });
+  }
+  // Draw an image into a canvas no larger than maxSide (keeps OCR and barcode reading fast).
+  function toCanvas(img, w, h, maxSide = 2600) {
+    const k = Math.min(1, maxSide / Math.max(w, h));
+    const c = document.createElement('canvas');
+    c.width = Math.round(w * k); c.height = Math.round(h * k);
+    const x = c.getContext('2d', { willReadFrequently: true });
+    x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
+    x.drawImage(img, 0, 0, c.width, c.height);
+    return c;
+  }
+  async function openImage(file) {
+    try { const bmp = await createImageBitmap(file); return toCanvas(bmp, bmp.width, bmp.height); } catch {}
+    // Fallback (e.g. HEIC on Safari): let an <img> decode it.
+    const url = URL.createObjectURL(file);
+    try {
+      const img = new Image(); img.src = url; await img.decode();
+      return toCanvas(img, img.naturalWidth, img.naturalHeight);
+    } finally { URL.revokeObjectURL(url); }
+  }
+
+  async function importFile(file) {
+    const name = file.name || 'photo', ext = (name.split('.').pop() || '').toLowerCase(), type = file.type || '';
+    const src = { file: name };
+    if (type === 'application/pdf' || ext === 'pdf') {
+      const lib = await loadPdfjs();
+      const pdf = await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise;
+      const pages = Math.min(pdf.numPages, 60);
+      for (let p = 1; p <= pages; p++) {
+        const label = `${name} · page ${p} of ${pages}`;
+        impStatus(label);
+        const page = await pdf.getPage(p), psrc = { ...src, page: p };
+        const tc = await page.getTextContent();
+        const text = tc.items.map(i => i.str + (i.hasEOL ? '\n' : ' ')).join('');
+        extractText(text, { ...psrc, kind: 'PDF text' });
+        // Render the page to read any barcodes, and OCR it when it's a scan with no text layer.
+        const vp0 = page.getViewport({ scale: 1 }), scale = Math.min(3, 2600 / Math.max(vp0.width, vp0.height));
+        const vp = page.getViewport({ scale });
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(vp.width); canvas.height = Math.round(vp.height);
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        await page.render({ canvasContext: ctx, viewport: vp }).promise;
+        await readBarcodesFrom(ctx.getImageData(0, 0, canvas.width, canvas.height), psrc);
+        if (text.replace(/\s/g, '').length < 40) await ocr(canvas, label, psrc);
+        page.cleanup();
+      }
+      if (pdf.numPages > pages) toast(`Read the first ${pages} of ${pdf.numPages} pages`);
+      await pdf.destroy();
+    } else if (type.startsWith('image/') || /^(jpe?g|png|gif|webp|bmp|heic|heif|tiff?)$/.test(ext)) {
+      impStatus(`${name} · opening`);
+      let canvas;
+      try { canvas = await openImage(file); }
+      catch { throw new Error(`${name} couldn't be opened here. Save it as JPG or PNG and try again.`); }
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      await readBarcodesFrom(ctx.getImageData(0, 0, canvas.width, canvas.height), src);
+      await ocr(canvas, name, src);
+    } else if (ext === 'xlsx') {
+      impStatus(`${name} · reading`);
+      await loadScript('vendor/exceljs.min.js');
+      const wb = new ExcelJS.Workbook();
+      await wb.xlsx.load(await file.arrayBuffer());
+      const lines = [];
+      wb.eachSheet(ws => ws.eachRow(row => { const cells = []; row.eachCell(c => cells.push(c.text)); lines.push(cells.join(' | ')); }));
+      extractText(lines.join('\n'), { ...src, kind: 'File' });
+    } else if (ext === 'csv' || ext === 'txt' || type.startsWith('text/')) {
+      extractText(await file.text(), { ...src, kind: 'File' });
+    } else {
+      throw new Error(`${name}: this file type isn't supported. Use PDF, a photo, .xlsx, .csv or .txt (save Word or older Excel files as PDF).`);
+    }
+  }
+
+  const impStatus = msg => { $('#imp-status').textContent = msg; };
+  async function importFiles(files) {
+    files = [...files];
+    if (!files.length || impBusy) return;
+    impBusy = true; $('#imp-pick').disabled = $('#imp-photo').disabled = true;
+    const before = impCands.length, problems = [];
+    for (const f of files) {
+      try { await importFile(f); }
+      catch (err) { problems.push(err && err.message && !/^\[object/.test(err.message) ? err.message : `${f.name} couldn't be read.`); }
+    }
+    impBusy = false; $('#imp-pick').disabled = $('#imp-photo').disabled = false;
+    const found = impCands.length - before;
+    impStatus(problems.length ? problems.join(' ') : found ? `Found ${found} new code${found === 1 ? '' : 's'} in ${files.length} file${files.length === 1 ? '' : 's'}.`
+      : 'No TCNs or manifest numbers found. Try a sharper photo with the page flat and well lit, or the original PDF.');
+    renderImport();
+  }
+
+  function renderImport() {
+    const order = { tcn: 0, manifest: 1, tracking: 2, other: 3 };
+    impCands.sort((a, b) => order[a.type] - order[b.type] || a.id - b.id);
+    $('#imp-results').hidden = !impCands.length;
+    const on = impCands.filter(c => c.on).length;
+    $('#imp-count').textContent = `${impCands.length} found · ${on} selected`;
+    $('#imp-list').innerHTML = impCands.map(c => `
+      <div class="imp-row${c.on ? '' : ' off'}" data-id="${c.id}">
+        <input type="checkbox" data-act="on" ${c.on ? 'checked' : ''} aria-label="Include ${esc(c.value)}">
+        <div class="imp-top">
+          <select data-act="type" aria-label="Type">${Object.entries(IMP_TYPES).map(([k, t]) => `<option value="${k}"${c.type === k ? ' selected' : ''}>${t}</option>`).join('')}</select>
+          <input class="input code" data-act="value" value="${esc(c.value)}" autocapitalize="characters" spellcheck="false" aria-label="Code">
+        </div>
+        <small>${[...c.sources].join(' + ')} · ${esc([...c.where].slice(0, 3).join(', '))}${c.check ? ` · <span class="warn">check${c.fixed ? ' (O/0-type fix applied)' : ''}</span>` : ''}</small>
+      </div>`).join('');
+  }
+  $('#imp-list').addEventListener('change', e => {
+    const row = e.target.closest('.imp-row'); if (!row) return;
+    const c = impCands.find(x => x.id === +row.dataset.id), act = e.target.dataset.act;
+    if (act === 'on') c.on = e.target.checked;
+    if (act === 'type') c.type = e.target.value;
+    if (act === 'value') { c.value = e.target.value.toUpperCase().replace(/[^0-9A-Z-]/g, ''); c.check = false; }
+    renderImport();
+  });
+  $('#imp-all').addEventListener('click', () => { impCands.forEach(c => c.on = true); renderImport(); });
+  $('#imp-none').addEventListener('click', () => { impCands.forEach(c => c.on = false); renderImport(); });
+  $('#imp-clear').addEventListener('click', () => {
+    const was = impCands; impCands = []; impStatus(''); renderImport();
+    toast('Cleared', () => { impCands = was; renderImport(); });
+  });
+  const impSelected = () => impCands.filter(c => c.on && c.value);
+
+  // Entry points
+  $('#btn-import').addEventListener('click', () => { $('#imp-view').hidden = true; renderImport(); show('s-import'); });
+  $('#imp-back').addEventListener('click', () => { renderHome(); show('s-home'); });
+  $('#imp-pick').addEventListener('click', () => { $('#imp-input').value = ''; $('#imp-input').click(); });
+  $('#imp-photo').addEventListener('click', () => { $('#imp-cam').value = ''; $('#imp-cam').click(); });
+  $('#imp-input').addEventListener('change', e => importFiles(e.target.files));
+  $('#imp-cam').addEventListener('change', e => importFiles(e.target.files));
+  const drop = $('#imp-drop');
+  ['dragenter', 'dragover'].forEach(t => $('#s-import').addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(t => $('#s-import').addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
+  $('#s-import').addEventListener('drop', e => importFiles(e.dataTransfer?.files || []));
+
+  // Output 1: printable barcode sheet, two columns of labelled Code 128 barcodes.
+  $('#imp-sheet').addEventListener('click', async e => {
+    const btn = e.currentTarget, sel = impSelected();
+    if (!sel.length) { toast('Select at least one code.'); return; }
+    if (btn.getAttribute('aria-busy') === 'true') return;
+    btn.setAttribute('aria-busy', 'true');
+    try {
+      await loadScript('vendor/jspdf.umd.min.js');
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+      const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 36, GAP = 18;
+      const bars = await barRows(sel.map(c => c.value));
+      const colW = (W - 2 * M - GAP) / 2, BLOCK = 74, top = 96;
+      const files = [...new Set(sel.flatMap(c => [...c.where].map(w => w.replace(/ p\d+$/, ''))))];
+      const d = new Date(), stamp = `${pad(d.getDate())}${MON[d.getMonth()].toUpperCase()}${d.getFullYear()}`;
+      const header = () => {
+        doc.setFillColor(22, 32, 43); doc.rect(0, 0, W, 58, 'F');
+        doc.setFillColor(255, 184, 28); doc.rect(0, 58, W, 4, 'F');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(255, 255, 255);
+        doc.text(`BARCODES ${stamp}`, W / 2, 37, { align: 'center' });
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(91, 104, 120);
+        doc.text(doc.splitTextToSize(`From: ${files.join(', ')}`, W - 2 * M).slice(0, 2), M, 78);
+      };
+      header();
+      let col = 0, y = top;
+      for (const c of sel) {
+        if (y + BLOCK > H - 40) { doc.addPage(); header(); y = top; col = 0; }
+        const x = M + col * (colW + GAP);
+        doc.setDrawColor(201, 209, 218); doc.setLineWidth(0.6); doc.roundedRect(x, y, colW, BLOCK - 8, 4, 4, 'S');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(91, 104, 120);
+        doc.text(IMP_TYPES[c.type].toUpperCase(), x + 8, y + 12);
+        doc.setFont('courier', 'bold'); doc.setFontSize(10.5); doc.setTextColor(22, 32, 43);
+        doc.text(c.value, x + colW - 8, y + 12, { align: 'right' });
+        const row = bars.get(c.value);
+        if (row) drawBars(doc, row, x + 6, y + 19, colW - 12, BLOCK - 34);
+        col = 1 - col; if (!col) y += BLOCK;
+      }
+      await deliver(doc.output('blob'), `BARCODES-${stamp}.pdf`);
+    } catch { toast('Could not build the barcode sheet. Try again.'); }
+    finally { btn.removeAttribute('aria-busy'); }
+  });
+
+  // Output 2: add to a Tally Sheet. TCNs become items; one manifest/tracking # is attached to every TCN.
+  function importItems() {
+    const sel = impSelected(), tcns = sel.filter(c => c.type === 'tcn').map(c => c.value);
+    const docs = sel.filter(c => c.type === 'manifest' || c.type === 'tracking').map(c => c.value);
+    const mk = (tcn, tracking) => ({ id: uid(), tcn, tracking, pkgType: store.lastPkg || 'Box', pieces: 1, weight: '', scannedAt: new Date().toISOString(), source: 'import' });
+    const items = tcns.map(t => mk(t, docs.length === 1 ? docs[0] : ''));
+    if (!tcns.length || docs.length > 1) docs.forEach(d => items.push(mk('', d)));
+    return { items, tcns, docs };
+  }
+  $('#imp-tally').addEventListener('click', () => {
+    const { items, tcns, docs } = importItems();
+    if (!items.length) { toast('Select at least one TCN, manifest or tracking number.'); return; }
+    $('#imp-target-sum').textContent = `Adds ${items.length} item${items.length === 1 ? '' : 's'}` +
+      (tcns.length && docs.length === 1 ? `: ${tcns.length} TCN${tcns.length === 1 ? '' : 's'} with ${docs[0]} as the tracking/manifest number.` : '.') +
+      ' Pieces default to 1; add weights afterwards.';
+    const open = store.lists.filter(l => l.kind === 'tally' && !l.done).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    $('#imp-target-list').innerHTML = open.map(l =>
+      `<button class="btn" type="button" data-l="${l.id}"><span>${esc(listTitle(l))} · ${esc(l.member)}</span><small>${l.items.length} items</small></button>`).join('');
+    $('#imp-target-wrap').hidden = false;
+  });
+  $('#imp-target-cancel').addEventListener('click', () => { $('#imp-target-wrap').hidden = true; });
+  $('#imp-target-wrap').addEventListener('click', e => { if (e.target.id === 'imp-target-wrap') $('#imp-target-wrap').hidden = true; });
+  $('#imp-target-list').addEventListener('click', e => {
+    const b = e.target.closest('[data-l]'); if (!b) return;
+    const list = store.lists.find(l => l.id === b.dataset.l), { items } = importItems();
+    list.items.push(...items); save();
+    $('#imp-target-wrap').hidden = true;
+    openList(list);
+    toast(`Added ${items.length} item${items.length === 1 ? '' : 's'}`, () => {
+      list.items = list.items.filter(it => !items.includes(it)); save(); refreshViews();
+    });
+  });
+  $('#imp-target-new').addEventListener('click', () => {
+    pendingImport = importItems().items;
+    $('#imp-target-wrap').hidden = true;
+    openNewList('tally');
+  });
+
+  // Output 3: step through the codes on screen to scan into a computer.
+  let viewIdx = 0;
+  function renderImpView() {
+    const sel = impSelected(), c = sel[viewIdx];
+    if (!c) { $('#imp-view').hidden = true; $('#imp-results').hidden = false; return; }
+    $('#imp-view-pos').textContent = `${viewIdx + 1} of ${sel.length}`;
+    $('#imp-view-title').textContent = IMP_TYPES[c.type];
+    $('#imp-view-val').textContent = c.value;
+    $('#imp-view-prev').disabled = viewIdx === 0;
+    $('#imp-view-next').textContent = viewIdx === sel.length - 1 ? 'Finish' : 'Next';
+    drawCode($('#imp-view-code'), c.value, 'Code128');
+  }
+  $('#imp-show').addEventListener('click', () => {
+    if (!impSelected().length) { toast('Select at least one code.'); return; }
+    viewIdx = 0; $('#imp-results').hidden = true; $('#imp-view').hidden = false; renderImpView(); requestWake();
+  });
+  $('#imp-view-prev').addEventListener('click', () => { viewIdx = Math.max(0, viewIdx - 1); renderImpView(); });
+  $('#imp-view-next').addEventListener('click', () => { viewIdx++; renderImpView(); });
+  $('#imp-view-close').addEventListener('click', () => { $('#imp-view').hidden = true; renderImport(); });
+
+  // ---------- CMOS keying (beta) ----------
+  // The desk scanner types a barcode's contents as keystrokes, Tabs included, so one barcode
+  // can fill a whole CMOS screen. Tab counts follow the CMOS field order.
+  const T = n => '\t'.repeat(n);
+  const cmosArrivalNow = () => {
+    const d = new Date();
+    return `${pad(d.getDate())}${MON[d.getMonth()].toUpperCase()}${d.getFullYear()}/${pad(d.getHours())}${pad(d.getMinutes())}`;
+  };
+  const MIL_MODES = ['J', '9', 'B'];
+  const SYMS = [['QRCode', 'QR'], ['Code128', 'Code 128'], ['PDF417', 'PDF417'], ['DataMatrix', 'Data Matrix']];
+  function cmosCfg(l) {
+    l.cmos = Object.assign({
+      docMode: 'tracking', bol: '', scac: l.scac || '', type: 'O', arrival: '', mil: store.cmosMil || 'J',
+      consignor: 'F0000', consignee: 'FB5000', ciic: store.cmosCiic || 'U', sym: store.cmosSym || 'QRCode',
+      docNbrs: {}, skipped: {}, keyed: {}, idx: 0
+    }, l.cmos || {});
+    return l.cmos;
+  }
+  // Movement documents: one per tracking number, or one BOL for the whole list. Items need a TCN.
+  function cmosGroups(l) {
+    const c = cmosCfg(l), items = l.items.filter(it => it.tcn);
+    if (c.docMode === 'bol') return items.length ? [{ key: 'BOL', doc: c.bol, items }] : [];
+    const m = new Map();
+    items.forEach(it => {
+      const k = it.tracking || 'NOTRK-' + it.id;
+      if (!m.has(k)) m.set(k, { key: k, doc: it.tracking || c.docNbrs[k] || '', items: [] });
+      m.get(k).items.push(it);
+    });
+    return [...m.values()];
+  }
+  // Per document: check each TCN in CMOS, then build the document, then add each TCN not already there.
+  function cmosSteps(l) {
+    const c = cmosCfg(l), steps = [], groups = cmosGroups(l);
+    groups.forEach((g, gi) => {
+      g.items.forEach(it => steps.push({ kind: 'check', g, gi, it }));
+      const todo = g.items.filter(it => !c.skipped[it.id]);
+      if (!todo.length) return;
+      steps.push({ kind: 'header', g, gi });
+      todo.forEach((it, k) => steps.push({ kind: 'tcn', g, gi, it, last: k === todo.length - 1 }));
+    });
+    return { steps, groups };
+  }
+  const headerKeys = (c, doc) => `${doc}${T(4)}${c.scac}${T(3)}${c.consignor}${T(7)}${c.arrival}${T(2)}${c.mil}`;
+  const tcnKeys = (c, it) => `${c.type}${T(1)}${it.tcn}${T(1)}${+it.pieces || 1}${T(1)}${c.consignor}${T(1)}${c.consignee}${T(4)}${it.weight || ''}${T(6)}${it.ciic || c.ciic}`;
+  const showKeys = k => esc(k).replace(/\t/g, ' <b>⇥</b> ');
+
+  let ZXW = null;
+  async function zxWriter() {
+    if (ZXW) return ZXW;
+    await loadScript('vendor/zxing/zxing-writer.js');
+    ZXW = window.ZXingWASMWriter;
+    ZXW.prepareZXingModule({
+      overrides: { locateFile: (path, prefix) => path.endsWith('.wasm') ? new URL('vendor/zxing/' + path, location.href).href : prefix + path }
+    });
+    return ZXW;
+  }
+  let drawToken = 0;
+  async function drawCode(el, text, format) {
+    const token = String(++drawToken);
+    el.dataset.token = token;
+    el.classList.toggle('linear', format === 'Code128');
+    el.innerHTML = '<span class="msg">Drawing barcode…</span>';
+    try {
+      const W = await zxWriter();
+      const out = await W.writeBarcode(text, { format, scale: format === 'Code128' ? 2 : 6 });
+      if (el.dataset.token !== token) return;
+      if (out.error || !out.svg) throw new Error(out.error || 'no barcode');
+      el.innerHTML = out.svg;
+      // Make the SVG scale to its box: give it a viewBox from its pixel size, then let CSS size it.
+      const svg = el.querySelector('svg');
+      if (svg && !svg.getAttribute('viewBox')) {
+        const w = parseFloat(svg.getAttribute('width')), h = parseFloat(svg.getAttribute('height'));
+        if (w && h) svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+      }
+      svg?.removeAttribute('width'); svg?.removeAttribute('height');
+      svg?.setAttribute('shape-rendering', 'crispEdges');
+    } catch {
+      el.innerHTML = '<span class="msg">Could not draw this barcode. Try another barcode style.</span>';
+    }
+  }
+
+  // Setup form
+  function renderCmosSetup() {
+    const c = cmosCfg(current);
+    $('#cm-docmode').innerHTML = [['tracking', 'Tracking # per shipment'], ['bol', 'One BOL for the list']].map(([v, t]) =>
+      `<button type="button" class="chip" data-v="${v}" aria-pressed="${c.docMode === v}">${t}</button>`).join('');
+    $('#cm-bol').hidden = c.docMode !== 'bol'; $('#cm-bol').value = c.bol;
+    $('#cm-scac').value = c.scac; $('#cm-type').value = c.type;
+    $('#cm-arrival').value = c.arrival || cmosArrivalNow();
+    const milOther = !MIL_MODES.includes(c.mil);
+    $('#cm-mil').innerHTML = [...MIL_MODES, 'Other'].map(v =>
+      `<button type="button" class="chip scac" data-v="${v}" aria-pressed="${v === 'Other' ? milOther : c.mil === v}">${v}</button>`).join('');
+    $('#cm-mil-other').hidden = !milOther; $('#cm-mil-other').value = milOther ? c.mil : '';
+    $('#cm-consignor').value = c.consignor; $('#cm-consignee').value = c.consignee;
+    $('#cm-ciic').innerHTML = CIIC_CODES.map(v =>
+      `<button type="button" class="chip" data-v="${v}" aria-pressed="${c.ciic === v}">${v}</button>`).join('');
+    $('#cm-sym').innerHTML = SYMS.map(([v, t]) =>
+      `<button type="button" class="chip" data-v="${v}" aria-pressed="${c.sym === v}">${t}</button>`).join('');
+    $('#cm-err').hidden = true;
+  }
+  const readCmosSetup = () => {
+    const c = cmosCfg(current), up = v => v.trim().toUpperCase();
+    c.bol = up($('#cm-bol').value); c.scac = up($('#cm-scac').value); c.type = up($('#cm-type').value) || 'O';
+    c.arrival = up($('#cm-arrival').value); c.consignor = up($('#cm-consignor').value); c.consignee = up($('#cm-consignee').value);
+    if (!MIL_MODES.includes(c.mil)) c.mil = up($('#cm-mil-other').value);
+  };
+  const chipPick = (sel, key, after) => $(sel).addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    readCmosSetup();
+    cmosCfg(current)[key] = b.dataset.v === 'Other' ? '' : b.dataset.v;
+    after?.(b.dataset.v);
+    save(); renderCmosSetup();
+  });
+  chipPick('#cm-docmode', 'docMode', () => { cmosCfg(current).idx = 0; });
+  chipPick('#cm-mil', 'mil', v => { if (v === 'Other') setTimeout(() => $('#cm-mil-other').focus()); else store.cmosMil = v; });
+  chipPick('#cm-ciic', 'ciic', v => { store.cmosCiic = v; });
+  chipPick('#cm-sym', 'sym', v => { store.cmosSym = v; if (!$('#cm-test').hidden) drawCode($('#cm-test-code'), 'TEST\t123', v); });
+  $('#cm-now').addEventListener('click', () => { $('#cm-arrival').value = cmosArrivalNow(); });
+  $('#cm-test-btn').addEventListener('click', () => {
+    $('#cm-test').hidden = !$('#cm-test').hidden;
+    if (!$('#cm-test').hidden) drawCode($('#cm-test-code'), 'TEST\t123', cmosCfg(current).sym);
+  });
+
+  function openCmos() {
+    cmosCfg(current);
+    renderCmosSetup();
+    $('#cmos-setup').hidden = false; $('#cmos-run').hidden = true;
+    $('#cm-test').hidden = true;
+    show('s-cmos'); requestWake();
+  }
+  $('#btn-cmos').addEventListener('click', openCmos);
+  $('#cmos-back').addEventListener('click', () => { if (current.cmos) readCmosSetup(); save(); renderList(); show('s-list'); });
+  $('#cmos-setup-btn').addEventListener('click', () => { renderCmosSetup(); $('#cmos-setup').hidden = false; $('#cmos-run').hidden = true; });
+  $('#cmos-setup').addEventListener('submit', e => {
+    e.preventDefault();
+    readCmosSetup();
+    const c = cmosCfg(current);
+    const err = !current.items.some(it => it.tcn) ? 'This list has no items with a TCN to key.'
+      : c.docMode === 'bol' && !c.bol ? 'Enter the BOL number, or choose Tracking # per shipment.'
+      : !c.scac ? 'Enter the SCAC.'
+      : !/^\d{2}[A-Z]{3}\d{4}\/\d{4}$/.test(c.arrival) ? 'Arrival must look like 20OCT2026/1430.'
+      : !c.mil ? 'Choose a MIL mode.' : '';
+    if (err) { $('#cm-err').textContent = err; $('#cm-err').hidden = false; return; }
+    save();
+    $('#cmos-setup').hidden = true; $('#cmos-run').hidden = false;
+    renderCmosStep();
+  });
+
+  // Keying run
+  function renderCmosStep() {
+    const c = cmosCfg(current), { steps, groups } = cmosSteps(current);
+    c.idx = Math.max(0, Math.min(c.idx, steps.length));
+    const totalTcn = groups.reduce((a, g) => a + g.items.filter(it => !c.skipped[it.id]).length, 0);
+    const keyed = Object.keys(c.keyed).filter(id => current.items.some(it => it.id === id && it.tcn && !c.skipped[id])).length;
+    $('#cm-prog-tcn').textContent = `${keyed} of ${totalTcn} TCNs keyed`;
+    $('#cm-docin').hidden = true; $('#cm-check-btns').hidden = true; $('#cm-next').hidden = false;
+    $('#cm-prev').disabled = c.idx === 0;
+    if (c.idx >= steps.length) {
+      $('#cm-prog-doc').textContent = `${groups.length} document${groups.length === 1 ? '' : 's'}`;
+      $('#cm-title').textContent = 'All done';
+      $('#cm-instr').textContent = `Every TCN on this list is keyed or was already in CMOS. Tap Back to revisit a step, or Done to return to the list.`;
+      $('#cm-code').innerHTML = '<span class="msg">Nothing left to scan.</span>'; $('#cm-seq').textContent = '';
+      $('#cm-next').hidden = true;
+      return;
+    }
+    const st = steps[c.idx], g = st.g;
+    $('#cm-prog-doc').textContent = `Document ${st.gi + 1} of ${groups.length}`;
+    let keys = '';
+    if (st.kind === 'check') {
+      $('#cm-title').textContent = `Check TCN ${st.it.tcn}`;
+      $('#cm-instr').textContent = 'Click the TCN box on the CMOS search screen, scan, then click Search. Already there? Tap In CMOS · skip.';
+      keys = st.it.tcn;
+      $('#cm-check-btns').hidden = false; $('#cm-next').hidden = true;
+    } else if (st.kind === 'header') {
+      const doc = g.doc || c.docNbrs[g.key] || '';
+      $('#cm-title').textContent = `Build document ${doc || '(needs a number)'}`;
+      $('#cm-instr').textContent = 'Click New on the search screen, click the Movement Doc Nbr box, and scan. Check the fields, click Save, then click New to add TCNs.';
+      if (!g.items[0].tracking && c.docMode !== 'bol') {
+        $('#cm-docin').hidden = false; $('#cm-docnbr').value = doc;
+        $('#cm-docnbr').dataset.key = g.key;
+      }
+      keys = doc ? headerKeys(c, doc) : '';
+    } else {
+      $('#cm-title').textContent = `Add TCN ${st.it.tcn}`;
+      $('#cm-instr').textContent = `Click the Type box in New TCN, scan, then check the fields and click ${st.last ? 'Save and Close (last TCN in this document)' : 'Add TCN'}.`;
+      keys = tcnKeys(c, st.it);
+    }
+    $('#cm-seq').innerHTML = keys ? showKeys(keys) : '';
+    if (keys) drawCode($('#cm-code'), keys, c.sym);
+    else $('#cm-code').innerHTML = '<span class="msg">Type the Movement Doc Nbr above to show the barcode.</span>';
+  }
+  const cmosMove = d => { const c = cmosCfg(current); c.idx += d; save(); renderCmosStep(); $('#s-cmos .body').scrollTop = 0; };
+  $('#cm-next').addEventListener('click', () => {
+    const c = cmosCfg(current), { steps } = cmosSteps(current), st = steps[c.idx];
+    if (st?.kind === 'tcn') c.keyed[st.it.id] = new Date().toISOString();
+    cmosMove(1);
+  });
+  $('#cm-prev').addEventListener('click', () => cmosMove(-1));
+  $('#cm-notfound').addEventListener('click', () => {
+    const c = cmosCfg(current), st = cmosSteps(current).steps[c.idx];
+    if (st) delete c.skipped[st.it.id];
+    cmosMove(1);
+  });
+  $('#cm-found').addEventListener('click', () => {
+    const c = cmosCfg(current), st = cmosSteps(current).steps[c.idx];
+    if (st) c.skipped[st.it.id] = true;
+    cmosMove(1);
+  });
+  $('#cm-docnbr').addEventListener('input', e => {
+    const c = cmosCfg(current);
+    c.docNbrs[e.target.dataset.key] = e.target.value.trim().toUpperCase();
+    save();
+    const doc = c.docNbrs[e.target.dataset.key];
+    $('#cm-title').textContent = `Build document ${doc || '(needs a number)'}`;
+    const keys = doc ? headerKeys(c, doc) : '';
+    $('#cm-seq').innerHTML = keys ? showKeys(keys) : '';
+    if (keys) drawCode($('#cm-code'), keys, c.sym);
+  });
+
+  // ---------- welcome / quick guide ----------
+  function showWelcome() {
+    $('#welcome-name').value = store.userName || '';
+    $('#welcome-go').textContent = store.userName ? 'Done' : 'Get Started';
+    $('#welcome-err').hidden = true;
+    show('s-welcome');
+  }
+  $('#btn-guide').addEventListener('click', showWelcome);
+  $('#welcome-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = $('#welcome-name').value.trim();
+    if (!v) { $('#welcome-err').textContent = 'Enter your name to continue.'; $('#welcome-err').hidden = false; return; }
+    store.userName = v; save();
+    renderHome(); show('s-home');
+  });
+
   // ---------- boot ----------
+  if (!isTouchDevice()) {
+    $('#imp-photo').hidden = true;                 // computers have no rear camera; Choose files covers images
+    $('#btn-photo').textContent = 'Open image';    // the scan screen's photo button opens a file picker there
+    $('#qs-photo').textContent = 'Open image';
+  }
   renderHome();
+  if (!store.userName) showWelcome();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
